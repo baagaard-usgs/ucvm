@@ -6,6 +6,8 @@
 #include "ucvm_utils.h"
 #include "ucvm_config.h"
 
+#define MODEL_FILENAME "1d/1d.conf"
+
 /* Init flag */
 int ucvm_1d_init_flag = 0;
 
@@ -92,9 +94,10 @@ double ucvm_1d_scec_vs(double vp, double rho) {
 
 
 /* Init 1D */
-int ucvm_1d_model_init(int m, ucvm_modelconf_t *conf)
+int ucvm_1d_model_init(int m, const char *lib_dir, const char *models_path, ucvm_modelconf_t *conf)
 {
   int i, len;
+  char model_path[UCVM_MAX_PATH_LEN];
   ucvm_config_t *chead;
   ucvm_config_t *cptr;
 
@@ -103,14 +106,14 @@ int ucvm_1d_model_init(int m, ucvm_modelconf_t *conf)
     return(UCVM_CODE_ERROR);
   }
 
-  if ((conf->config == NULL) || (strlen(conf->config) == 0)) {
-    fprintf(stderr, "No config path defined for model %s\n", conf->label);
+  if ((models_path == NULL) || (strlen(models_path) == 0)) {
+    fprintf(stderr, "Empty models path when initializing model %s\n", conf->label);
     return(UCVM_CODE_ERROR);
   }
+  snprintf(model_path, UCVM_MAX_PATH_LEN, "%s/%s", models_path, MODEL_FILENAME);
 
-  if (!ucvm_is_file(conf->config)) {
-    fprintf(stderr, "1D conf file %s is not a valid file\n", 
-            conf->config);
+  if (!ucvm_is_file(model_path)) {
+    fprintf(stderr, "1D conf file %s is not a valid file\n", model_path);
     return(UCVM_CODE_ERROR);
   }
 
@@ -118,9 +121,9 @@ int ucvm_1d_model_init(int m, ucvm_modelconf_t *conf)
   memcpy(&ucvm_1d_conf, conf, sizeof(ucvm_modelconf_t));
 
   /* Read conf file */
-  chead = ucvm_parse_config(conf->config);
+  chead = ucvm_parse_config(model_path);
   if (chead == NULL) {
-    fprintf(stderr, "Failed to parse config file %s\n", conf->config);
+    fprintf(stderr, "Failed to parse config file %s\n", model_path);
     return(UCVM_CODE_ERROR);
   }
 

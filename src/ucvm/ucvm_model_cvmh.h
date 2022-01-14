@@ -5,7 +5,7 @@
 
 
 /* Init CVM-H */
-int ucvm_cvmh_model_init(int id, ucvm_modelconf_t *conf);
+int ucvm_cvmh_model_init(int id, const char *lib_dir, const char *models_dir, ucvm_modelconf_t *conf);
 
 
 /* Finalize CVM-H */

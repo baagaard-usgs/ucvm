@@ -3,7 +3,7 @@
 #include <string.h>
 #include "ucvm_utils.h"
 #include "ucvm_model_cvmh.h"
-#include "vx_sub.h"
+#include "cvmh/vx_sub.h"
 
 /* VX no data value */
 #define VX_NO_DATA -99999.0
@@ -22,20 +22,23 @@ int ucvm_cvmh_force_depth = 0;
 
 
 /* Init CVM-H */
-int ucvm_cvmh_model_init(int id, ucvm_modelconf_t *conf)
+int ucvm_cvmh_model_init(int id, const char *lib_dir, const char *models_dir, ucvm_modelconf_t *conf)
 {
+  char model_path[UCVM_MAX_PATH_LEN];
+
   if (ucvm_cvmh_init_flag) {
     fprintf(stderr, "Model %s is already initialized\n", conf->label);
     return(UCVM_CODE_ERROR);
   }
 
-  if ((conf->config == NULL) || (strlen(conf->config) == 0)) {
+  if ((models_dir == NULL) || (strlen(models_dir) == 0)) {
     fprintf(stderr, "No config path defined for model %s\n", conf->label);
     return(UCVM_CODE_ERROR);
   }
+  snprintf(model_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, conf->label);
 
   /* Init vx */
-  if (vx_setup(conf->config) != 0) {
+  if (vx_setup(model_path) != 0) {
     return(UCVM_CODE_ERROR);
   }
 

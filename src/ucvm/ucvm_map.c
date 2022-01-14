@@ -58,7 +58,7 @@ ucvm_map_t *_get_map_next()
 }
 
 /* Init Map */
-int ucvm_map_init(const char *label, const char *conf)
+int ucvm_map_init(const char *label, const char *file_path)
 {
   char *appmeta;
 
@@ -67,13 +67,13 @@ int ucvm_map_init(const char *label, const char *conf)
     return(UCVM_CODE_ERROR);
   }
 
-  if ((conf == NULL) || (strlen(conf) == 0)) {
-    fprintf(stderr, "No map path defined for map\n");
+  if ((file_path == NULL) || (strlen(file_path) == 0)) {
+    fprintf(stderr, "No file path defined for map\n");
     return(UCVM_CODE_ERROR);
   }
 
-  if (!ucvm_is_file(conf)) {
-    fprintf(stderr, "Etree map %s is not a valid file\n", conf);
+  if (!ucvm_is_file(file_path)) {
+    fprintf(stderr, "Etree map %s is not a valid file\n", file_path);
     return(UCVM_CODE_ERROR);
   }
 
@@ -102,21 +102,21 @@ int ucvm_map_init(const char *label, const char *conf)
 //  fprintf(stderr,"   map label ..%s\n",MAPPTR->map_label_str);
 
   /* Open Etree map */
-  MAPPTR->map_ep = etree_open(conf, O_RDONLY, UCVM_MAP_BUF_SIZE, 0, 3);
+  MAPPTR->map_ep = etree_open(file_path, O_RDONLY, UCVM_MAP_BUF_SIZE, 0, 3);
   if (MAPPTR->map_ep == NULL) {
-    fprintf(stderr, "Failed to open the etree %s\n", conf);
+    fprintf(stderr, "Failed to open the etree %s\n", file_path);
     return(UCVM_CODE_ERROR);
   }
 
   /* Read meta data and check it */
   appmeta = etree_getappmeta(MAPPTR->map_ep);
   if (appmeta == NULL) {
-    fprintf(stderr, "Failed to read metadata from etree %s\n", conf);
+    fprintf(stderr, "Failed to read metadata from etree %s\n", file_path);
     return(UCVM_CODE_ERROR);
   }
   if (ucvm_meta_etree_map_unpack(appmeta, &(MAPPTR->map_meta)) != 
       UCVM_CODE_SUCCESS) {
-    fprintf(stderr, "Failed to unpack metadata from etree %s\n", conf);
+    fprintf(stderr, "Failed to unpack metadata from etree %s\n", file_path);
     return(UCVM_CODE_ERROR);
   }
   free(appmeta);

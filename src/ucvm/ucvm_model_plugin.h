@@ -58,7 +58,7 @@ typedef int (*MFPTR())();
 typedef int (*MVPTR())(char *, int);
 
 // UCVM API Required Functions
-int ucvm_plugin_model_init(int id, ucvm_modelconf_t *conf);	/** Initializes the model. */
+int ucvm_plugin_model_init(int id, const char *lib_dir, const char *modesl_dir, ucvm_modelconf_t *conf);	/** Initializes the model. */
 int ucvm_plugin_model_finalize();				/** Cleans up memory, closes model. */
 int ucvm_plugin_model_version(int id, char *ver, int len);	/** Retrieves the version of model that we are using. */
 int ucvm_plugin_model_label(int id, char *lab, int len);	/** Retrieves the label for model. */
@@ -66,7 +66,7 @@ int ucvm_plugin_model_setparam(int id, int param, ...);		/** Sets optional param
 int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode,		/** Actually queries the model. */
 			  int n, ucvm_point_t *pnt,
 			  ucvm_data_t *data);
-int ucvm_plugin_get_model(const char *dir, const char *label,
+int ucvm_plugin_get_model(const char *lib_dir, const char *models_dir, const char *label,
 			  ucvm_model_t *m);			/** Fills the UCVM model structure. */
 
 #endif

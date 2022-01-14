@@ -63,12 +63,6 @@ int disp_resources(int active_only)
       if (strlen(resources[i].version) > 0) {
 	printf("\t\tVersion    : %s\n", resources[i].version);
       }
-      if (strlen(resources[i].config) > 0) {
-	printf("\t\tConfig     : %s\n", resources[i].config);
-      }
-      if (strlen(resources[i].extconfig) > 0) {
-	printf("\t\tExt Config : %s\n", resources[i].extconfig);
-      }
       for (j = 0; j < resources[i].numflags; j++) {
 	printf("\t\tFlag       : %s=%s\n", 
 	       resources[i].flags[j].key, resources[i].flags[j].value);

@@ -134,6 +134,8 @@ int ucvm_get_model_vals(ucvm_point_t *pnt, ucvm_data_t *data)
 int ucvm_init(const char *config)
 {
   ucvm_init_flag = 0;
+  char models_dir[UCVM_MAX_PATH_LEN];
+  char map_path[UCVM_MAX_PATH_LEN];
 
   /* Config file parameters */
   ucvm_config_t *cfgentry = NULL;
@@ -154,6 +156,13 @@ int ucvm_init(const char *config)
   /* Uncomment to dump config to screen */
   // ucvm_dump_config(ucvm_cfg);
 
+  cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_models_path");
+  if (cfgentry == NULL) {
+    fprintf(stderr, "UCVM models path not found in %s\n", config);
+    return(UCVM_CODE_ERROR);
+  }
+  snprintf(models_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
+
   /* Check that UCVM interface and map path are defined */
   /* for ucvm */
   cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_interface");
@@ -162,11 +171,11 @@ int ucvm_init(const char *config)
     return(UCVM_CODE_ERROR);
   }
   if (strcmp(cfgentry->value, UCVM_MAP_ETREE) != 0) {
-    fprintf(stderr, "Invalid UCVM map interface %s\n", cfgentry->value);
+    fprintf(stderr, "Invalid UCVM map interface '%s'. Expected '%s'\n", cfgentry->value, UCVM_MAP_ETREE);
     return(UCVM_CODE_ERROR);
   }
-  if (ucvm_find_name(ucvm_cfg, "ucvm_mappath") == NULL) {
-    fprintf(stderr, "UCVM map path not found in %s\n", config);
+  if (ucvm_find_name(ucvm_cfg, "ucvm_map_relpath") == NULL) {
+    fprintf(stderr, "UCVM map relative path not found in %s\n", config);
     return(UCVM_CODE_ERROR);
   }
   /* for ucvm_utah */
@@ -176,11 +185,12 @@ int ucvm_init(const char *config)
     return(UCVM_CODE_ERROR);
   }
   if (strcmp(cfgentry->value, UCVM_MAP_ETREE) != 0) {
-    fprintf(stderr, "Invalid UCVM Utah map interface %s\n", cfgentry->value);
+    fprintf(stderr, "Invalid UCVM Utah map interface '%s'. Expected '%s'\n", cfgentry->value, UCVM_MAP_ETREE);
     return(UCVM_CODE_ERROR);
   }
-  if (ucvm_find_name(ucvm_cfg, "ucvm_utah_mappath") == NULL) {
-    fprintf(stderr, "UCVM Utah map path not found in %s\n", config);
+  cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_utah_map_relpath");
+  if (cfgentry == NULL) {
+    fprintf(stderr, "UCVM Utah map relative path not found in %s\n", config);
     return(UCVM_CODE_ERROR);
   }
 
@@ -196,11 +206,10 @@ int ucvm_init(const char *config)
 
   /* Free UCVM model config */
   //ucvm_free_config(cfg);
+  snprintf(map_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, cfgentry->value);
 
   /* Initialize default map */
-  if (ucvm_map_init(UCVM_MAP_UCVM, 
-		    ucvm_find_name(ucvm_cfg, "ucvm_mappath")->value) 
-      != UCVM_CODE_SUCCESS) {
+  if (ucvm_map_init(UCVM_MAP_UCVM, map_path) != UCVM_CODE_SUCCESS) {
     fprintf(stderr, "Failed to initialize UCVM map\n");
     return(UCVM_CODE_ERROR);
   }
@@ -316,6 +325,8 @@ int ucvm_add_model(const char *label) {
   ucvm_modelconf_t mconf;
   int retval = UCVM_CODE_ERROR;
   char key[UCVM_CONFIG_MAX_STR];
+  char lib_dir[UCVM_MAX_PATH_LEN];
+  char models_dir[UCVM_MAX_PATH_LEN];
   ucvm_config_t *cfgentry = NULL;
 
   if (ucvm_init_flag == 0) {
@@ -426,12 +437,15 @@ int ucvm_add_model(const char *label) {
 
   /* Lookup any plugin-based model. */
   if (retval != UCVM_CODE_SUCCESS && is_predef == 0) {
-	  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_install_path");
-
+	  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_lib_path");
 	  cfgentry = ucvm_find_name(ucvm_cfg, key);
-	  retval = ucvm_plugin_get_model(cfgentry->value, label, &m);
+    snprintf(lib_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
 
-	  //PluginModel *pm = new PluginModel();
+	  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_models_path");
+	  cfgentry = ucvm_find_name(ucvm_cfg, key);
+    snprintf(models_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
+
+	  retval = ucvm_plugin_get_model(lib_dir, models_dir, label, &m);
 
 	  is_predef = 1;
 	  is_plugin = 1;
@@ -474,27 +488,11 @@ int ucvm_add_model(const char *label) {
   memset(&mconf, 0, sizeof(ucvm_modelconf_t));
   ucvm_strcpy(mconf.label, label, UCVM_MAX_LABEL_LEN);
 
-  if (is_plugin) {
-	  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_install_path");
-	  cfgentry = ucvm_find_name(ucvm_cfg, key);
-	  if (cfgentry != NULL) {
-	    ucvm_strcpy(mconf.config, cfgentry->value, UCVM_MAX_PATH_LEN);
-	  }
-  } else {
+  if (!is_plugin) {
 	  snprintf(key, UCVM_CONFIG_MAX_STR, "%s_region", label);
 	  cfgentry = ucvm_find_name(ucvm_cfg, key);
 	  if (cfgentry != NULL) {
 	    region_parse(cfgentry->value, &(mconf.region));
-	  }
-	  snprintf(key, UCVM_CONFIG_MAX_STR, "%s_modelpath", label);
-	  cfgentry = ucvm_find_name(ucvm_cfg, key);
-	  if (cfgentry != NULL) {
-	    ucvm_strcpy(mconf.config, cfgentry->value, UCVM_MAX_PATH_LEN);
-	  }
-	  snprintf(key, UCVM_CONFIG_MAX_STR, "%s_extmodelpath", label);
-	  cfgentry = ucvm_find_name(ucvm_cfg, key);
-	  if (cfgentry != NULL) {
-	    ucvm_strcpy(mconf.extconfig, cfgentry->value, UCVM_MAX_PATH_LEN);
 	  }
   }
 
@@ -511,6 +509,8 @@ int ucvm_add_user_model(ucvm_model_t *m, ucvm_modelconf_t *mconf)
   ucvm_model_t *mlist;
   char mlabel[UCVM_MAX_LABEL_LEN];
   char key[UCVM_CONFIG_MAX_STR];
+  char lib_dir[UCVM_MAX_PATH_LEN];
+  char models_dir[UCVM_MAX_PATH_LEN];
   char param[UCVM_CONFIG_MAX_STR];
   char setting[UCVM_CONFIG_MAX_STR];
   char *flag[2];
@@ -543,22 +543,18 @@ int ucvm_add_user_model(ucvm_model_t *m, ucvm_modelconf_t *mconf)
   mptr = &(mlist[mmax]);
   memcpy(mptr, m, sizeof(ucvm_model_t));
 
+  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_lib_path");
+  cfgentry = ucvm_find_name(ucvm_cfg, key);
+   snprintf(lib_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
+
+  snprintf(key, UCVM_CONFIG_MAX_STR, "ucvm_models_path");
+  cfgentry = ucvm_find_name(ucvm_cfg, key);
+   snprintf(models_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
+
   /* Perform init */
-  if ((mptr->init)(mmax, mconf) != UCVM_CODE_SUCCESS) {
-
-    if(strlen(mconf->extconfig) != 0) {
-      fprintf(stderr, "Failed to init model %s with config '%s' and extconfig '%s'.", 
-	    mconf->label, mconf->config, mconf->extconfig);
-      fprintf(stderr, 
-	    "Config keys %s_modelpath and/or %s_extmodelpath are likely undefined.\n", 
-	    mconf->label, mconf->label);
-      } else {
-        fprintf(stderr, "Failed to init model %s with config '%s'.", 
-	    mconf->label, mconf->config);
-        fprintf(stderr, 
-	    "Config keys %s_modelpath is likely undefined.\n", mconf->label);
-    }
-
+  if ((mptr->init)(mmax, lib_dir, models_dir, mconf) != UCVM_CODE_SUCCESS) {
+      fprintf(stderr, "Failed to init model '%s' using library path '%s' and models path '%s'.",
+        mconf->label, lib_dir, models_dir);
     return(UCVM_CODE_ERROR);
   }
 
@@ -690,12 +686,21 @@ int ucvm_assoc_user_ifunc(const char *mlabel, ucvm_ifunc_t *ifunc)
 /* Use specific map (elev, vs30), by label */
 int ucvm_use_map(const char *label) {
   char key[UCVM_CONFIG_MAX_STR];
+  char models_dir[UCVM_MAX_PATH_LEN];
+  char map_path[UCVM_MAX_PATH_LEN];
   ucvm_config_t *cfgentry = NULL;
 
   if (ucvm_init_flag == 0) {
     fprintf(stderr, "UCVM not initialized\n");
     return(UCVM_CODE_ERROR);
   }
+
+  cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_models_path");
+  if (cfgentry == NULL) {
+    fprintf(stderr, "UCVM models path not found in config file.\n");
+    return(UCVM_CODE_ERROR);
+  }
+  snprintf(models_dir, UCVM_MAX_PATH_LEN, "%s", cfgentry->value);
 
   /* Lookup map */
   if ((label != NULL) && (strlen(label) > 0)) {
@@ -704,34 +709,32 @@ int ucvm_use_map(const char *label) {
     cfgentry = ucvm_find_name(ucvm_cfg, key);
     if (cfgentry != NULL) {
       if (strcmp(cfgentry->value, UCVM_MAP_ETREE) == 0) {
-	/* Lookup mappath */
-	snprintf(key, UCVM_CONFIG_MAX_STR, "%s_mappath", label);
+	/* Lookup map relative path */
+	snprintf(key, UCVM_CONFIG_MAX_STR, "%s_map_relpath", label);
 	cfgentry = ucvm_find_name(ucvm_cfg, key);
 	if (cfgentry != NULL) {
 	  /* Finalize old map */
 	  ucvm_map_finalize();
+  snprintf(map_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, cfgentry->value);
 	  /* Initialize new map */
-	  if (ucvm_map_init(label, cfgentry->value) 
+	  if (ucvm_map_init(label, map_path) 
 	      != UCVM_CODE_SUCCESS) {
 	    fprintf(stderr, "Failed to initialize map %s\n", label);
 	    return(UCVM_CODE_ERROR);
 	  }
 	} else {
 	  fprintf(stderr, "Map %s is not a valid map. ", label);
-	  fprintf(stderr, "Config key %s_mappath not defined.\n", 
-		  label);
+	  fprintf(stderr, "Config key %s_map_relpath not defined.\n", label);
 	  return(UCVM_CODE_ERROR);
 	}
       } else {
 	fprintf(stderr, "Map %s is not a valid map. ", label);
-	fprintf(stderr, "Unsupported map interface %s specified.\n", 
-		cfgentry->value);
+	fprintf(stderr, "Unsupported map interface '%s' specified.\n", cfgentry->value);
 	return(UCVM_CODE_ERROR);
       }
     } else {
       fprintf(stderr, "Map %s is not a valid map. ", label);
-      fprintf(stderr, "Config key %s_interface not defined.\n", 
-	      label);
+      fprintf(stderr, "Config key %s_interface not defined.\n", label);
       return(UCVM_CODE_ERROR);
     }
   }
@@ -1252,16 +1255,6 @@ int ucvm_get_resources(ucvm_resource_t *res, int *len)
 
     /* Populate modelpath, extmodelpath, flags  */
     for (j = 0; j < numinst; j++) {
-      snprintf(key, UCVM_CONFIG_MAX_STR, "%s_modelpath", res[j].label);
-      cfgentry = ucvm_find_name(ucvm_cfg, key);
-      if (cfgentry != NULL) {
-	ucvm_strcpy(res[j].config, cfgentry->value, UCVM_MAX_PATH_LEN);
-      }
-      snprintf(key, UCVM_CONFIG_MAX_STR, "%s_extmodelpath", res[j].label);
-      cfgentry = ucvm_find_name(ucvm_cfg, key);
-      if (cfgentry != NULL) {
-	ucvm_strcpy(res[j].extconfig, cfgentry->value, UCVM_MAX_PATH_LEN);
-      }
       snprintf(key, UCVM_CONFIG_MAX_STR, "%s_param", res[j].label);
       cfgentry = ucvm_find_name(ucvm_cfg, key);
       res[j].numflags = 0;
@@ -1312,15 +1305,7 @@ int ucvm_get_resources(ucvm_resource_t *res, int *len)
 	res[j].active = 1;
       }
     }
-
-    /* Populate mappath */
-    for (j = startj; j < numinst; j++) {
-      snprintf(key, UCVM_CONFIG_MAX_STR, "%s_mappath", res[j].label);
-      cfgentry = ucvm_find_name(ucvm_cfg, key);
-      if (cfgentry != NULL) {
-	ucvm_strcpy(res[j].config, cfgentry->value, UCVM_MAX_PATH_LEN);
-      }
-    }
+    
   }
 
   /* Get installed model interfaces */

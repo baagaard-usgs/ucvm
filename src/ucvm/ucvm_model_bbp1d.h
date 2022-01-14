@@ -6,7 +6,7 @@
 
 
 /* Init BBP 1D */
-int ucvm_bbp1d_model_init(int id, ucvm_modelconf_t *conf);
+int ucvm_bbp1d_model_init(int id, const char *lib_dir, const char *models_path, ucvm_modelconf_t *conf);
 
 
 /* Finalize BBP 1D */

@@ -4,13 +4,13 @@
 #include "ucvm_utils.h"
 #include "ucvm_model_plugin.h"
 
-ucvm_plugin_model_t plugin_models[UCVM_MAX_MODELS];
-
-#ifndef _UCVM_AM_STATIC
+#if defined(BUILD_SHARED_LIBRARY)
 	#include <dlfcn.h>
+#if !defined(SHARED_LIBRARY_EXT)
+#define SHARED_LIBRARY_EXT so
 #endif
+#else
 
-#ifdef _UCVM_AM_STATIC
 #ifdef _UCVM_ENABLE_IVLSU
 	extern int ivlsu_init;
 	extern int ivlsu_query;
@@ -65,13 +65,15 @@ ucvm_plugin_model_t plugin_models[UCVM_MAX_MODELS];
  * Initializes the model within the UCVM framework. This is accomplished
  * by dynamically loading the library symbols.
  *
- * @param The model's id.
- * @param The configuration file parameters for the model.
+ * @param id The model's id.
+ * @param lib_dir Path to directory where UCVM libraries are installed ($prefix/lib).
+ * @param models_dir Path to directory where UCVM models are installed ($prefix/share/ucvm/model).
+ * @param conf The configuration file parameters for the model.
  * @return UCVM_CODE_SUCCESS on success or ERROR on failure.
  */
-int ucvm_plugin_model_init(int id, ucvm_modelconf_t *conf) {
+int ucvm_plugin_model_init(int id, const char *lib_dir, const char *models_dir, ucvm_modelconf_t *conf) {
 	void *handle;
-	char sopath[1024];
+	char libpath[UCVM_MAX_PATH_LEN];
 
         ucvm_plugin_model_t *pptr=get_plugin_by_label(conf->label);
       
@@ -84,11 +86,11 @@ int ucvm_plugin_model_init(int id, ucvm_modelconf_t *conf) {
               pptr=get_plugin_by_order(plugin_model_initialized);
         }
 
-#ifndef _UCVM_AM_STATIC
-	snprintf(sopath, 1024, "%s/model/%s/lib/lib%s.so", conf->config, conf->label, conf->label);
+#if defined(BUILD_SHARED_LIBRARY)
+	snprintf(libpath, UCVM_MAX_PATH_LEN, "%s/lib%s.%s", lib_dir, conf->label, SHARED_LIBRARY_EXT);
 
 	// Open the library.
-	handle = dlopen (sopath, RTLD_LAZY);
+	handle = dlopen(libpath, RTLD_LAZY);
 
 	if (!handle) {
 		fprintf(stderr, "Could not load %s. Error: %s.\n", conf->label, dlerror());
@@ -133,9 +135,8 @@ int ucvm_plugin_model_init(int id, ucvm_modelconf_t *conf) {
 		fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
 		return UCVM_CODE_ERROR;
 	}
-#endif
+#else
 
-#ifdef _UCVM_AM_STATIC
 #ifdef _UCVM_ENABLE_CVLSU
         if (strcmp(conf->label, UCVM_MODEL_CVLSU) == 0) {
                 pptr->model_init = &cvlsu_init;
@@ -405,19 +406,21 @@ int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode, int n, ucvm_point_t *pnt
 /**
  * Fill model structure with the plugin model, if it exists.
  *
- * @param dir The directory in which UCVM was installed.
- * @param label The model label to be set.
+ * @param lib_dir The directory where the UCVM libraries were installed ($prefix/lib).
+ * @param models_dir The directory where the UCVM models were intalled ($prefix/share/ucvm/model).
+ * @param label The label of the plugin model.
  * @param m The model structure to be filled.
  * @return SUCCESS if the model found, FAIL if not.
  */
-int ucvm_plugin_get_model(const char *dir, const char *label, ucvm_model_t *m) {
+int ucvm_plugin_get_model(const char *lib_dir, const char *models_dir, const char *label, ucvm_model_t *m) {
 	// Does this model exist?
-	char sofile[1024];
+	char libpath[UCVM_MAX_PATH_LEN];
 	FILE *fp;
 
-	snprintf(sofile, 1024, "%s/model/%s/lib/lib%s.so", dir, label, label);
-	if ((fp = fopen(sofile, "r"))) {
+	snprintf(libpath, UCVM_MAX_PATH_LEN, "%s/lib%s.%s", lib_dir, label, SHARED_LIBRARY_EXT);
+	if ((fp = fopen(libpath, "r"))) {
 		fclose(fp);
+
 		m->mtype = UCVM_MODEL_CRUSTAL;
 		m->init = ucvm_plugin_model_init;
 		m->finalize = ucvm_plugin_model_finalize;
@@ -431,19 +434,29 @@ int ucvm_plugin_get_model(const char *dir, const char *label, ucvm_model_t *m) {
 	}
 }
 
-/* Setparam CVM-S5 */
 int ucvm_plugin_model_setparam(int id, int param, ...)
 {
   va_list ap;
+  char *pname;
+  char *pvalue;
 
   ucvm_plugin_model_t *pptr=get_plugin_by_id(id);
   if (!pptr) {
     fprintf(stderr, "Invalid model id.\n");
     return(UCVM_CODE_ERROR);
   }
+  if (!pptr->model_set_param) {
+	  fprintf(stderr, "Plugin model with id '%d' missing set_param\n", id);
+	  return(UCVM_CODE_ERROR);
+  }
 
   va_start(ap, param);
   switch (param) {
+  case UCVM_PARAM_MODEL_CONF:
+	pname = va_arg(ap, char *);
+	pvalue = va_arg(ap, char *);
+	pptr->model_set_param(pname, pvalue);
+	break;
   default:
     break;
   }

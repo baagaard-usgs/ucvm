@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "etree.h"
+#include "euclid/etree.h"
 #include "ucvm_utils.h"
 #include "ucvm_meta_etree.h"
 #include "ucvm_proj_ucvm.h"
@@ -41,7 +41,7 @@ typedef struct ucvm_map_t {
 } ucvm_map_t;
 
 ucvm_map_t *get_map_by_label(const char *);
-int ucvm_map_init(const char *label, const char *conf);
+int ucvm_map_init(const char *label, const char *filename);
 int ucvm_map_finalize();
 int ucvm_map_version(char *ver, int len);
 int ucvm_map_label(char *label, int len);

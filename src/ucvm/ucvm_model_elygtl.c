@@ -19,7 +19,7 @@ ucvm_modelconf_t ucvm_elygtl_conf;
 
 
 /* Init Ely */
-int ucvm_elygtl_model_init(int m, ucvm_modelconf_t *conf)
+int ucvm_elygtl_model_init(int m, const char *lib_dir, const char *models_dir, ucvm_modelconf_t *conf)
 {
   if (ucvm_elygtl_init_flag) {
     fprintf(stderr, "Model %s is already initialized\n", conf->label);

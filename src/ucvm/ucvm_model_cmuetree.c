@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "etree.h"
+#include "euclid/etree.h"
 #include "ucvm_config.h"
 #include "ucvm_utils.h"
 #include "ucvm_meta_etree.h"
@@ -39,7 +39,7 @@ ucvm_cmuetree_t ucvm_cmuetree;
 
 
 /* Init Cmuetree */
-int ucvm_cmuetree_model_init(int id, ucvm_modelconf_t *conf)
+int ucvm_cmuetree_model_init(int id, const char *lib_dir, const char *models_dir, ucvm_modelconf_t *conf)
 {
   int i, len;
   char filename[UCVM_MAX_PATH_LEN];
@@ -54,13 +54,8 @@ int ucvm_cmuetree_model_init(int id, ucvm_modelconf_t *conf)
     return(UCVM_CODE_ERROR);
   }
 
-  if ((conf->config == NULL) || (strlen(conf->config) == 0)) {
+  if ((models_dir == NULL) || (strlen(models_dir) == 0)) {
     fprintf(stderr, "No config path defined for model %s\n", conf->label);
-    return(UCVM_CODE_ERROR);
-  }
-
-  if (!ucvm_is_file(conf->config)) {
-    fprintf(stderr, "CMU etree %s is not a valid file\n", conf->config);
     return(UCVM_CODE_ERROR);
   }
 
@@ -68,11 +63,7 @@ int ucvm_cmuetree_model_init(int id, ucvm_modelconf_t *conf)
   memcpy(&ucvm_cmuetree.conf, conf, sizeof(ucvm_modelconf_t));
 
   /* Read conf file */
-  len=strlen(conf->config)+strlen("/cmuetree.conf");
-  if(len >= UCVM_MAX_PATH_LEN) {
-    len = UCVM_MAX_PATH_LEN -1;
-  }
-  snprintf(filename, len, "%s/cmuetree.conf", conf->config);
+  snprintf(filename, UCVM_MAX_PATH_LEN, "%s/%s/cmuetree.conf", models_dir, conf->label);
   cfg = ucvm_parse_config(filename);
   if (cfg == NULL) {
     fprintf(stderr, "Failed to read CMU etree config file\n");
@@ -124,23 +115,20 @@ int ucvm_cmuetree_model_init(int id, ucvm_modelconf_t *conf)
   ucvm_cmuetree.ep = etree_open(ucvm_cmuetree.epath, 
 				O_RDONLY, CMUETREE_BUF_SIZE, 0, 3);
   if (ucvm_cmuetree.ep == NULL) {
-    fprintf(stderr, "Failed to open the CMU etree %s\n", 
-	    ucvm_cmuetree.conf.config);
+    fprintf(stderr, "Failed to open the CMU etree %s\n", ucvm_cmuetree.epath);
     return(UCVM_CODE_ERROR);
   }
 
   /* Read meta data and check it */
   appmeta = etree_getappmeta(ucvm_cmuetree.ep);
   if (appmeta == NULL) {
-    fprintf(stderr, "Failed to read metadata from CMU etree %s\n", 
-	    ucvm_cmuetree.conf.config);
+    fprintf(stderr, "Failed to read metadata from CMU etree %s\n", ucvm_cmuetree.epath);
     return(UCVM_CODE_ERROR);
   }
   if (ucvm_meta_etree_cmu_unpack(appmeta, 
 				 &ucvm_cmuetree.meta) != 
       UCVM_CODE_SUCCESS) {
-    fprintf(stderr, "Failed to unpack metadata from etree %s\n", 
-  	    ucvm_cmuetree.conf.config);
+    fprintf(stderr, "Failed to unpack metadata from etree %s\n", ucvm_cmuetree.epath);
     return(UCVM_CODE_ERROR);
   }
   free(appmeta);

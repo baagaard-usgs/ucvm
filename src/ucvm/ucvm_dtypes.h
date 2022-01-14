@@ -234,8 +234,6 @@ typedef struct ucvm_modelconf_t
 {
   char label[UCVM_MAX_LABEL_LEN];
   ucvm_region_t region;
-  char config[UCVM_MAX_PATH_LEN];
-  char extconfig[UCVM_MAX_PATH_LEN];
 } ucvm_modelconf_t;
 
 
@@ -243,7 +241,7 @@ typedef struct ucvm_modelconf_t
 typedef struct ucvm_model_t 
 {
   ucvm_mtype_t mtype;
-  int (*init)(int id, ucvm_modelconf_t *conf);
+  int (*init)(int id, const char* lib_dir, const char *models_path, ucvm_modelconf_t *conf);
   int (*finalize)();
   int (*getversion)(int id, char *ver, int len);
   int (*getlabel)(int id, char *lab, int len);
@@ -279,8 +277,6 @@ typedef struct ucvm_resource_t
   int active; /* Applicable to models/maps only */
   char label[UCVM_MAX_LABEL_LEN];
   char version[UCVM_MAX_VERSION_LEN];
-  char config[UCVM_MAX_PATH_LEN];
-  char extconfig[UCVM_MAX_PATH_LEN];
   int numflags;
   ucvm_flag_t flags[UCVM_MAX_FLAGS]; /* Applicable to models only */
 } ucvm_resource_t;
