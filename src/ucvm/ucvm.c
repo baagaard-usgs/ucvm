@@ -193,19 +193,6 @@ int ucvm_init(const char *config)
     fprintf(stderr, "UCVM Utah map relative path not found in %s\n", config);
     return(UCVM_CODE_ERROR);
   }
-
-  /* Read in UCVM conf file */
-  /* There is currently no UCVM-specific config that is needed */
-  //snprintf(modelconf, UCVM_CONFIG_MAX_STR, "%s/ucvm.conf", 
-  //	  ucvm_find_name(ucvm_cfg, "ucvm_modelpath")->value);
-  //cfg = ucvm_parse_config(modelconf);
-  //if (cfg == NULL) {
-  //  fprintf(stderr, "Failed to read UCVM model conf file\n");
-  //  return(UCVM_CODE_ERROR);
-  //}
-
-  /* Free UCVM model config */
-  //ucvm_free_config(cfg);
   snprintf(map_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, cfgentry->value);
 
   /* Initialize default map */
