@@ -98,125 +98,140 @@ int ucvm_plugin_model_init(int id, const char *lib_dir, const char *models_dir, 
 	}
 
 	// Load the symbols.
-	MIPTR *iptr = dlsym(handle, "get_model_init");
-	pptr->model_init = iptr();
-
+	MI_FNPTR init_fnptr;
+	*(void**)(&init_fnptr) = dlsym(handle, "ucvmapi_model_init");
 	if (dlerror() != NULL) {
-		fprintf(stderr, "Could not load model_init.\n");
+		fprintf(stderr, "Could not load ucvmapi_model_init.\n");
 		return UCVM_CODE_ERROR;
 	}
+	pptr->model_init = *init_fnptr;
 
-	MQPTR *qptr = dlsym(handle, "get_model_query");
-	pptr->model_query = qptr();
-
+	MF_FNPTR finalize_fnptr;
+	*(void**)(&finalize_fnptr) = dlsym(handle, "ucvmapi_model_finalize");
 	if (dlerror() != NULL) {
-		fprintf(stderr, "Could not load model_query.\n");
+		fprintf(stderr, "Could not load ucvmapi_model_finalize.\n");
+		return UCVM_CODE_ERROR;
+	} 
+	pptr->model_finalize = *finalize_fnptr;
+
+	MV_FNPTR version_fnptr;
+	*(void**)(&version_fnptr) = dlsym(handle, "ucvmapi_model_version");
+	if (dlerror() != NULL) {
+		fprintf(stderr, "Could not load ucvmapi_model_version.\n");
 		return UCVM_CODE_ERROR;
 	}
+	pptr->model_version = *version_fnptr;
 
-	MFPTR *fptr = dlsym(handle, "get_model_finalize");
-	pptr->model_finalize = fptr();
-
+	MP_FNPTR set_param_fnptr;
+	*(void**)(&set_param_fnptr) = dlsym(handle, "ucvmapi_model_set_param");
 	if (dlerror() != NULL) {
-		fprintf(stderr, "Could not load model_finalize.\n");
+		fprintf(stderr, "Could not load ucvmapi_model_set_param.\n");
 		return UCVM_CODE_ERROR;
 	}
+	pptr->model_set_param = *set_param_fnptr;
 
-	MVPTR *vptr = dlsym(handle, "get_model_version");
-	pptr->model_version = vptr();
-
+	MQ_FNPTR query_fnptr;
+	*(void**)(&query_fnptr) = dlsym(handle, "ucvmapi_model_query");
 	if (dlerror() != NULL) {
-		fprintf(stderr, "Could not load model_version.\n");
+		fprintf(stderr, "Could not load ucvmapi_model_query.\n");
 		return UCVM_CODE_ERROR;
 	}
+	pptr->model_query = *query_fnptr;
 
 	// Initialize the model.
-	if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-		fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+	if (pptr->model_init(models_dir, conf->label) != 0) {
+		fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
 		return UCVM_CODE_ERROR;
 	}
 #else
 
 #ifdef _UCVM_ENABLE_CVLSU
         if (strcmp(conf->label, UCVM_MODEL_CVLSU) == 0) {
-                pptr->model_init = &cvlsu_init;
-                pptr->model_query = &cvlsu_query;
-                pptr->model_finalize = &cvlsu_finalize;
-                pptr->model_version = &cvlsu_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = cvlsu_init;
+                pptr->model_finalize = cvlsu_finalize;
+                pptr->model_version = cvlsu_version;
+				pptr->model_set_param = cvlsu_set_param;
+                pptr->model_query = cvlsu_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_IVLSU
         if (strcmp(conf->label, UCVM_MODEL_IVLSU) == 0) {
-                pptr->model_init = &ivlsu_init;
-                pptr->model_query = &ivlsu_query;
-                pptr->model_finalize = &ivlsu_finalize;
-                pptr->model_version = &ivlsu_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = ivlsu_init;
+                pptr->model_finalize = ivlsu_finalize;
+                pptr->model_version = ivlsu_version;
+				pptr->model_set_param = ivlsu_set_param;
+                pptr->model_query = ivlsu_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_ALBACORE
         if (strcmp(conf->label, UCVM_MODEL_ALBACORE) == 0) {
-                pptr->model_init = &albacore_init;
-                pptr->model_query = &albacore_query;
-                pptr->model_finalize = &albacore_finalize;
-                pptr->model_version = &albacore_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = albacore_init;
+                pptr->model_finalize = albacore_finalize;
+                pptr->model_version = albacore_version;
+				pptr->model_set_param = albacore_set_param;
+                pptr->model_query = albacore_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_CVMS5
         if (strcmp(conf->label, UCVM_MODEL_CVMS5) == 0) {
-                pptr->model_init = &cvms5_init;
-                pptr->model_query = &cvms5_query;
-                pptr->model_finalize = &cvms5_finalize;
-                pptr->model_version = &cvms5_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = cvms5_init;
+                pptr->model_finalize = cvms5_finalize;
+                pptr->model_version = cvms5_version;
+				pptr->model_set_param = cvms5_set_param;
+                pptr->model_query = cvms5_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_CCA
         if (strcmp(conf->label, UCVM_MODEL_CCA) == 0) {
-                pptr->model_init = &cca_init;
-                pptr->model_query = &cca_query;
-                pptr->model_finalize = &cca_finalize;
-                pptr->model_version = &cca_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = cca_init;
+                pptr->model_finalize = cca_finalize;
+                pptr->model_version = cca_version;
+				pptr->model_set_param = cca_set_param;
+                pptr->model_query = cca_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_CS173
         if (strcmp(conf->label, UCVM_MODEL_CS173) == 0) {
-                pptr->model_init = &cs173_init;
-                pptr->model_query = &cs173_query;
-                pptr->model_finalize = &cs173_finalize;
-                pptr->model_version = &cs173_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = cs173_init;
+                pptr->model_finalize = cs173_finalize;
+                pptr->model_version = cs173_version;
+				pptr->model_set_param = cs173_set_param;
+                pptr->model_query = cs173_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
 #endif
 #ifdef _UCVM_ENABLE_CS173H
         if (strcmp(conf->label, UCVM_MODEL_CS173H) == 0) {
-                pptr->model_init = &cs173h_init;
-                pptr->model_query = &cs173h_query;
-                pptr->model_finalize = &cs173h_finalize;
-                pptr->model_version = &cs173h_version;
-                if ((*pptr->model_init)(conf->config, conf->label) != 0) {
-                        fprintf(stderr, "Failed to initialize model, %s.\n", conf->label);
+                pptr->model_init = cs173h_init;
+                pptr->model_finalize = cs173h_finalize;
+                pptr->model_version = cs173h_version;
+				pptr->model_set_param = cs173h_set_param;
+                pptr->model_query = cs173h_query;
+                if (pptr->model_init(conf->config, conf->label) != 0) {
+                        fprintf(stderr, "Failed to initialize model '%s'.\n", conf->label);
                         return UCVM_CODE_ERROR;
                 }
         }
@@ -229,10 +244,10 @@ int ucvm_plugin_model_init(int id, const char *lib_dir, const char *models_dir, 
 #endif
 
 	// Assign the id.
-        pptr->ucvm_plugin_model_id = id;
+        pptr->model_id = id;
 
 	// Save the model configuration data.
-	memcpy(&(pptr->ucvm_plugin_model_conf), conf, sizeof(ucvm_modelconf_t));
+	memcpy(&(pptr->model_conf), conf, sizeof(ucvm_modelconf_t));
 
 	// Yes, this model has been initialized successfully.
 	plugin_model_initialized += 1;
@@ -251,8 +266,9 @@ int ucvm_plugin_model_finalize()
   for(i=0; i< plugin_model_initialized; i++) {
     // Finalize the model.
      ucvm_plugin_model_t *pptr=&plugin_models[i];
-     (pptr->model_finalize)();
+     pptr->model_finalize();
   }
+
   // We're no longer initialized.
   plugin_model_initialized = 0;
 
@@ -275,7 +291,7 @@ int ucvm_plugin_model_version(int id, char *ver, int len)
     return UCVM_CODE_ERROR;
   }
 
-  if ((*pptr->model_version)(ver, len) != 0) {
+  if (pptr->model_version(ver, len) != 0) {
     return UCVM_CODE_ERROR;
   }
 
@@ -297,7 +313,7 @@ int ucvm_plugin_model_label(int id, char *lab, int len)
     return UCVM_CODE_ERROR;
   }
 
-  ucvm_strcpy(lab, pptr->ucvm_plugin_model_conf.label, len);
+  ucvm_strcpy(lab, pptr->model_conf.label, len);
   return UCVM_CODE_SUCCESS;
 }
 
@@ -343,7 +359,7 @@ int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode, int n, ucvm_point_t *pnt
 
 	for (i = 0; i < n; i++) {
 	    if ((data[i].crust.source == UCVM_SOURCE_NONE) && ((data[i].domain == UCVM_DOMAIN_INTERP) || (data[i].domain == UCVM_DOMAIN_CRUST)) &&
-	      	(region_contains_null(&(pptr->ucvm_plugin_model_conf.region), cmode, &(pnt[i])))) {
+	      	(region_contains_null(&(pptr->model_conf.region), cmode, &(pnt[i])))) {
 
 	        /* Modify pre-computed depth to account for GTL interp range */
 	        depth = data[i].depth + data[i].shift_cr;
@@ -357,11 +373,11 @@ int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode, int n, ucvm_point_t *pnt
 
 	    	if (nn == MODEL_POINT_BUFFER || i == n - 1) {
 	    		// We've reached the maximum buffer. Do the query.
-	    		(*(pptr->model_query))(ucvm_plugin_pnts_buffer, ucvm_plugin_data_buffer, nn);
+	    		pptr->model_query(ucvm_plugin_pnts_buffer, ucvm_plugin_data_buffer, nn);
 	    		// Transfer our findings.
 	    		for (j = 0; j < nn; j++) {
 	    			if (ucvm_plugin_data_buffer[j].vp >= 0 && ucvm_plugin_data_buffer[j].vs >= 0 && ucvm_plugin_data_buffer[j].rho >= 0) {
-	    				data[index_mapping[j]].crust.source = pptr->ucvm_plugin_model_id;
+	    				data[index_mapping[j]].crust.source = pptr->model_id;
 	    				data[index_mapping[j]].crust.vp = ucvm_plugin_data_buffer[j].vp;
 	    				data[index_mapping[j]].crust.vs = ucvm_plugin_data_buffer[j].vs;
 	    				data[index_mapping[j]].crust.rho = ucvm_plugin_data_buffer[j].rho;
@@ -378,11 +394,11 @@ int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode, int n, ucvm_point_t *pnt
 	}
         /* catch the last bits of partial chunk */
         if(nn != 0) {
-	    (*(pptr->model_query))(ucvm_plugin_pnts_buffer, ucvm_plugin_data_buffer, nn);
+	    pptr->model_query(ucvm_plugin_pnts_buffer, ucvm_plugin_data_buffer, nn);
 	    // Transfer our findings.
 	    for (j = 0; j < nn; j++) {
 	    	if (ucvm_plugin_data_buffer[j].vp >= 0 && ucvm_plugin_data_buffer[j].vs >= 0 && ucvm_plugin_data_buffer[j].rho >= 0) {
-	    		data[index_mapping[j]].crust.source = pptr->ucvm_plugin_model_id;
+	    		data[index_mapping[j]].crust.source = pptr->model_id;
 	    		data[index_mapping[j]].crust.vp = ucvm_plugin_data_buffer[j].vp;
 	    		data[index_mapping[j]].crust.vs = ucvm_plugin_data_buffer[j].vs;
 	    		data[index_mapping[j]].crust.rho = ucvm_plugin_data_buffer[j].rho;
@@ -469,7 +485,7 @@ int ucvm_plugin_model_setparam(int id, int param, ...)
 ucvm_plugin_model_t *get_plugin_by_label(char *label) {
    int i;
    for(i =0; i< plugin_model_initialized; i++) {
-     ucvm_modelconf_t *mptr = &(plugin_models[i].ucvm_plugin_model_conf);
+     ucvm_modelconf_t *mptr = &(plugin_models[i].model_conf);
      if( strcmp(mptr->label,label) == 0) 
         return &plugin_models[i];
    }
@@ -479,7 +495,7 @@ ucvm_plugin_model_t *get_plugin_by_label(char *label) {
 ucvm_plugin_model_t *get_plugin_by_id(int id) {
    int i;
    for(i =0; i< plugin_model_initialized; i++) {
-     if( plugin_models[i].ucvm_plugin_model_id== id) 
+     if( plugin_models[i].model_id== id) 
         return &plugin_models[i];
    }
    return(0);

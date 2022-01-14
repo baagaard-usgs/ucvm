@@ -20,53 +20,86 @@
 #include "ucvm_dtypes.h"
 
 // Defines
-#define MODEL_POINT_BUFFER	1000
+#define MODEL_POINT_BUFFER  1000
 
 // Structures
 typedef struct basic_point_t {
-	double longitude;
-	double latitude;
-	double depth;
+    double longitude;
+    double latitude;
+    double depth;
 } basic_point_t;
 
 typedef struct basic_properties_t {
-	double vp;
-	double vs;
-	double rho;
-	double qp;
-	double qs;
+    double vp;
+    double vs;
+    double rho;
+    double qp;
+    double qs;
 } basic_properties_t;
 
 typedef struct ucvm_plugin_model_t {
-/** Used to store the model ID. */
-int ucvm_plugin_model_id;
-/** Store the configuration data. */
-ucvm_modelconf_t ucvm_plugin_model_conf;
-int (*model_init)(const char *dir, const char *label);
-int (*model_query)(basic_point_t *points, basic_properties_t *data, int numpoints);
-int (*model_finalize)();
-int (*model_version)(char *ver, int len);
+    /** Used to store the model ID. */
+    int model_id;
+    /** Store the configuration data. */
+    ucvm_modelconf_t model_conf;
+    int (*model_init)(const char *dir,
+                      const char *label);
+    int (*model_finalize)();
+    int (*model_version)(char *ver,
+                         int len);
+    int (*model_set_param)(const char* name,
+                           const char* value);
+    int (*model_query)(basic_point_t *points,
+                       basic_properties_t *data,
+                       int numpoints);
 } ucvm_plugin_model_t;
 
 ucvm_plugin_model_t *get_plugin_by_label(char *);
+
 ucvm_plugin_model_t *get_plugin_by_id(int);
+
 ucvm_plugin_model_t *get_plugin_by_order(int);
 
-typedef int (*MIPTR())(const char *, const char *);
-typedef int (*MQPTR())(basic_point_t *, basic_properties_t *, int);
-typedef int (*MFPTR())();
-typedef int (*MVPTR())(char *, int);
+typedef int (*MI_FNPTR)(const char *,
+                        const char *);
+typedef int (*MF_FNPTR)();
+typedef int (*MV_FNPTR)(char *,
+                        int);
+typedef int (*MP_FNPTR)(const char *,
+                        const char *);
+typedef int (*MQ_FNPTR)(basic_point_t *,
+                        basic_properties_t *,
+                        int);
 
 // UCVM API Required Functions
-int ucvm_plugin_model_init(int id, const char *lib_dir, const char *modesl_dir, ucvm_modelconf_t *conf);	/** Initializes the model. */
-int ucvm_plugin_model_finalize();				/** Cleans up memory, closes model. */
-int ucvm_plugin_model_version(int id, char *ver, int len);	/** Retrieves the version of model that we are using. */
-int ucvm_plugin_model_label(int id, char *lab, int len);	/** Retrieves the label for model. */
-int ucvm_plugin_model_setparam(int id, int param, ...);		/** Sets optional parameters. */
-int ucvm_plugin_model_query(int id, ucvm_ctype_t cmode,		/** Actually queries the model. */
-			  int n, ucvm_point_t *pnt,
-			  ucvm_data_t *data);
-int ucvm_plugin_get_model(const char *lib_dir, const char *models_dir, const char *label,
-			  ucvm_model_t *m);			/** Fills the UCVM model structure. */
+int ucvm_plugin_model_init(int id,
+                           const char *lib_dir,
+                           const char *modesl_dir,
+                           ucvm_modelconf_t *conf); /** Initializes the model. */
+
+int ucvm_plugin_model_finalize(); /** Cleans up memory, closes model. */
+
+int ucvm_plugin_model_version(int id,
+                              char *ver,
+                              int len); /** Retrieves the version of model that we are using. */
+
+int ucvm_plugin_model_label(int id,
+                            char *lab,
+                            int len); /** Retrieves the label for model. */
+
+int ucvm_plugin_model_setparam(int id,
+                               int param,
+                               ...); /** Sets optional parameters. */
+
+int ucvm_plugin_model_query(int id,
+                            ucvm_ctype_t cmode, /** Actually queries the model. */
+                            int n,
+                            ucvm_point_t *pnt,
+                            ucvm_data_t *data);
+
+int ucvm_plugin_get_model(const char *lib_dir,
+                          const char *models_dir,
+                          const char *label,
+                          ucvm_model_t *m); /** Fills the UCVM model structure. */
 
 #endif
