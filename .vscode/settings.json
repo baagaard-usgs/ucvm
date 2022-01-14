@@ -1,0 +1,10 @@
+{
+    "editor.formatOnSave": true,
+    "telemetry.enableTelemetry": false,
+    "telemetry.enableCrashReporter": false,
+    "uncrustify.configPath.linux": "developer/uncrustify.cfg",
+    "uncrustify.configPath.osx": "developer/uncrustify.cfg",
+    "files.associations": {
+        "ucvm_utils.h": "c"
+    }
+}
