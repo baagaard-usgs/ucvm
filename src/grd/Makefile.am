@@ -1,7 +1,7 @@
 # Autoconf/Automake binaries and headers
 lib_LIBRARIES = libgrd.a
 bin_PROGRAMS = grd_query run_grd.sh
-include_HEADERS = grd.h grd_dtypes.h grd_config.h
+pkginclude_HEADERS = grd.h grd_dtypes.h grd_config.h
 
 
 # General compiler/linker flags

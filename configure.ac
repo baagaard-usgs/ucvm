@@ -1,796 +1,380 @@
-# GNU Autoconf config
+dnl GNU Autoconf config
 
-AC_INIT([UCVM], [21.7.0], [software@scec.org])
+AC_PREREQ(2.59)
+AC_INIT([UCVM], [22.X.0], [software@scec.org])
 AC_CONFIG_AUX_DIR([./aux-config])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign no-exeext])
-AC_PROG_RANLIB
 
-# Determine platform
-AC_CANONICAL_HOST
-# Check for which host we are on and setup a few things
-# specifically based on the host
-case $host_os in
-  darwin* )
-		AM_CONDITIONAL(USER_LINUX, false)
-		AM_CONDITIONAL(USER_MAC, true)
-        ;;
-  linux* )
-		AM_CONDITIONAL(USER_LINUX, true)
-		AM_CONDITIONAL(USER_MAC, false)
-		;;
-  *)
-        #Default Case
-        AC_MSG_ERROR([Your platform is not currently supported])
-        ;;
-esac
-
-# Determine MPI/CC compiler
-#: ${CFLAGS=""}
-AX_PROG_CC_MPI([true],[use_mpi=yes],[use_mpi=no])
-
-# Check for GNU compiler
-if test "x$ac_compiler_gnu" = "xno"; then
-AC_MSG_ERROR(["GNU C compiler or MPI wrapper based on GNU is required. Please check your programming environment."])
-fi
-
-# Set UCVM_HAVE_MPI flag
-AM_CONDITIONAL(UCVM_HAVE_MPI, [test x"$use_mpi" = xyes])
-
-# Parse command-line arguments
-AC_ARG_ENABLE([static],
-        [AS_HELP_STRING([--enable-static],
-        [enable static linking])],
-        [enable_static=yes],
-        [enable_static=no])
-
-if test "x$enable_static" = xyes; then
-	AM_CONDITIONAL(UCVM_AM_STATIC, true)
-else
-	AM_CONDITIONAL(UCVM_AM_STATIC, false)
-fi
-
-AC_ARG_ENABLE([netcdf],
-        [AS_HELP_STRING([--enable-netcdf],
-        [enable netCDF module])],
-        [enable_netcdf=yes],
-        [enable_netcdf=no])
-
-AC_ARG_ENABLE([iobuf],
-        [AS_HELP_STRING([--enable-iobuf],
-        [enable IOBUF module])],
-        [enable_iobuf=yes],
-        [enable_iobuf=no])
-
-AC_ARG_ENABLE([model-cvmh],
-        [AS_HELP_STRING([--enable-model-cvmh],
-        [enable model SCEC CVM-H])],
-        [enable_model_cvmh=yes],
-        [enable_model_cvmh=no])
-
-AC_ARG_ENABLE([model-cvms],
-        [AS_HELP_STRING([--enable-model-cvms],
-        [enable model SCEC CVM-S])],
-        [enable_model_cvms=yes],
-        [enable_model_cvms=no])
-
-AC_ARG_ENABLE([model-ivlsu],
-        [AS_HELP_STRING([--enable-model-ivlsu],
-        [enable model SCEC IMPERIAL])],
-        [enable_model_ivlsu=yes],
-        [enable_model_ivlsu=no])
-        
-AC_ARG_ENABLE([model-cvlsu],
-        [AS_HELP_STRING([--enable-model-cvlsu],
-        [enable model SCEC COACHELLA])],
-        [enable_model_cvlsu=yes],
-        [enable_model_cvlsu=no])
-        
-AC_ARG_ENABLE([model-albacore],
-        [AS_HELP_STRING([--enable-model-albacore],
-        [enable model SCEC ALBACORE])],
-        [enable_model_albacore=yes],
-        [enable_model_albacore=no])
-        
-AC_ARG_ENABLE([model-cvms5],
-        [AS_HELP_STRING([--enable-model-cvms5],
-        [enable model SCEC CVM-S5])],
-        [enable_model_cvms5=yes],
-        [enable_model_cvms5=no])
+dnl
+dnl Models
+dnl
 
 AC_ARG_ENABLE([model-cca],
-        [AS_HELP_STRING([--enable-model-cca],
-        [enable model SCEC CCA])],
-        [enable_model_cca=yes],
-        [enable_model_cca=no])
+	[AC_HELP_STRING([--enable-model-cca],
+		[enable use of SCEC CCA model @<:@default=no@:>@])],
+		[if test "$enableval" = "yes" ; then enable_model_cca=yes; else enable_model_cca=no; fi],
+		[enable_model_cca=no])
+AM_CONDITIONAL([ENABLE_MODEL_CCA], [test "$enable_model_cca" = yes])
 
-AC_ARG_ENABLE([model-cs173],
-        [AS_HELP_STRING([--enable-model-cs173],
-        [enable model SCEC CS173])],
-        [enable_model_cs173=yes],
-        [enable_model_cs173=no])
+AC_ARG_ENABLE([model-cvmh],
+	[AC_HELP_STRING([--enable-model-cvmh],
+		[enable use of SCEC CVM-H model @<:@default=no@:>@])],
+		[if test "$enableval" = "yes" ; then enable_model_cvmh=yes; else enable_model_cvmh=no; fi],
+		[enable_model_cvmh=no])
+AM_CONDITIONAL([ENABLE_MODEL_CVMH], [test "$enable_model_cvmh" = "yes"])
 
-AC_ARG_ENABLE([model-cs173h],
-        [AS_HELP_STRING([--enable-model-cs173h],
-        [enable model SCEC CS173H])],
-        [enable_model_cs173h=yes],
-        [enable_model_cs173h=no])
+dnl AC_ARG_ENABLE([model-cvms],
+dnl         [AS_HELP_STRING([--enable-model-cvms],
+dnl         [enable model SCEC CVM-S])],
+dnl         [enable_model_cvms=yes],
+dnl         [enable_model_cvms=no])
+        
+dnl AC_ARG_ENABLE([model-cvms5],
+dnl         [AS_HELP_STRING([--enable-model-cvms5],
+dnl         [enable model SCEC CVM-S5])],
+dnl         [enable_model_cvms5=yes],
+dnl         [enable_model_cvms5=no])
 
-AC_ARG_ENABLE([model-cencal],
-        [AS_HELP_STRING([--enable-model-cencal],
-        [enable model USGS CenCalVM])],
-        [enable_model_cencal=yes],
-        [enable_model_cencal=no])
+dnl AC_ARG_ENABLE([model-cs173],
+dnl         [AS_HELP_STRING([--enable-model-cs173],
+dnl         [enable model SCEC CS173])],
+dnl         [enable_model_cs173=yes],
+dnl         [enable_model_cs173=no])
 
-AC_ARG_ENABLE([model-cvmsi],
-        [AS_HELP_STRING([--enable-model-cvmsi],
-        [enable model SCEC CVM-SI])],
-        [enable_model_cvmsi=yes],
-        [enable_model_cvmsi=no])
+dnl AC_ARG_ENABLE([model-cs173h],
+dnl         [AS_HELP_STRING([--enable-model-cs173h],
+dnl         [enable model SCEC CS173H])],
+dnl         [enable_model_cs173h=yes],
+dnl         [enable_model_cs173h=no])
 
-AC_ARG_ENABLE([model-cvmnci],
-        [AS_HELP_STRING([--enable-model-cvmnci],
-        [enable model SCEC CVM-NCI])],
-        [enable_model_cvmnci=yes],
-        [enable_model_cvmnci=no])
+dnl AC_ARG_ENABLE([model-cencal],
+dnl         [AS_HELP_STRING([--enable-model-cencal],
+dnl         [enable model USGS CenCalVM])],
+dnl         [enable_model_cencal=yes],
+dnl         [enable_model_cencal=no])
 
-AC_ARG_ENABLE([model-wfcvm],
-        [AS_HELP_STRING([--enable-model-wfcvm],
-        [enable model WFCVM])],
-        [enable_model_wfcvm=yes],
-        [enable_model_wfcvm=no])
+dnl AC_ARG_ENABLE([model-cvmsi],
+dnl         [AS_HELP_STRING([--enable-model-cvmsi],
+dnl         [enable model SCEC CVM-SI])],
+dnl         [enable_model_cvmsi=yes],
+dnl         [enable_model_cvmsi=no])
 
-AC_ARG_ENABLE([model-cvmlt],
-        [AS_HELP_STRING([--enable-model-cvmlt],
-        [enable model Lin-Thurber])],
-        [enable_model_cvmlt=yes],
-        [enable_model_cvmlt=no])
+dnl AC_ARG_ENABLE([model-cvmnci],
+dnl         [AS_HELP_STRING([--enable-model-cvmnci],
+dnl         [enable model SCEC CVM-NCI])],
+dnl         [enable_model_cvmnci=yes],
+dnl         [enable_model_cvmnci=no])
 
-AC_ARG_ENABLE([model-cmrg],
-        [AS_HELP_STRING([--enable-model-cmrg],
-        [enable model CMRG])],
-        [enable_model_cmrg=yes],
-        [enable_model_cmrg=no])
+dnl AC_ARG_ENABLE([model-wfcvm],
+dnl         [AS_HELP_STRING([--enable-model-wfcvm],
+dnl         [enable model WFCVM])],
+dnl         [enable_model_wfcvm=yes],
+dnl         [enable_model_wfcvm=no])
 
-AC_ARG_ENABLE([model-tape],
-        [AS_HELP_STRING([--enable-model-tape],
-        [enable model Tape])],
-        [enable_model_tape=yes],
-        [enable_model_tape=no])
+dnl AC_ARG_ENABLE([model-cvmlt],
+dnl         [AS_HELP_STRING([--enable-model-cvmlt],
+dnl         [enable model Lin-Thurber])],
+dnl         [enable_model_cvmlt=yes],
+dnl         [enable_model_cvmlt=no])
 
+dnl AC_ARG_ENABLE([model-cmrg],
+dnl         [AS_HELP_STRING([--enable-model-cmrg],
+dnl         [enable model CMRG])],
+dnl         [enable_model_cmrg=yes],
+dnl         [enable_model_cmrg=no])
 
-# Get required Etree library and include locations
-AC_ARG_WITH([etree-include-path],
-  [AS_HELP_STRING([--with-etree-include-path],
-    [location of the Etree headers])],
-  [ETREE_INCL="-I$withval"],
-  [ETREE_INCL=""])
-AC_ARG_WITH([etree-lib-path],
-  [AS_HELP_STRING([--with-etree-lib-path], [location of the Etree libraries])],
-  [ETREE_LIB="-L$withval -letree"],
-  [ETREE_LIB="-letree"])
+dnl AC_ARG_ENABLE([model-tape],
+dnl         [AS_HELP_STRING([--enable-model-tape],
+dnl         [enable model Tape])],
+dnl         [enable_model_tape=yes],
+dnl         [enable_model_tape=no])
 
-# Get required Proj.4 library and include locations
-AC_ARG_WITH([proj4-include-path],
-  [AS_HELP_STRING([--with-proj4-include-path],
-    [location of the Proj.4 headers])],
-  [PROJ4_INCL="-I$withval"],
-  [PROJ4_INCL=""])
-AC_ARG_WITH([proj4-lib-path],
-  [AS_HELP_STRING([--with-proj4-lib-path], [location of the Proj.4 libraries])],
-  [PROJ4_LIB="-L$withval -lproj -lpthread"],
-  [PROJ4_LIB="-lproj -lpthread"])
+dnl
+dnl Dependencies
+dnl
 
-# Get optional netCDF library and include locations
-if test "x$enable_netcdf" = xyes; then
-   AC_ARG_WITH([netcdf-include-path],
-   [AS_HELP_STRING([--with-netcdf-include-path],
-   [location of the netCDF headers])],
-   [NETCDF_INCL="-I$withval"],
-   [NETCDF_INCL=""])
-   AC_ARG_WITH([netcdf-lib-path],
-   [AS_HELP_STRING([--with-netcdf-lib-path], [location of the netCDF libraries])],
-   [NETCDF_LIB="-L$withval -lnetcdf -lhdf5_hl -lhdf5 -lz -lm -lcurl -ldl"],
-   [NETCDF_LIB="-lnetcdf -lhdf5_hl -lhdf5 -lz -lm -lcurl -ldl"])
-fi
+dnl Etree (Euclid)
+AC_ARG_ENABLE([etree],
+    [AC_HELP_STRING([--enable-etree],
+        [install Etree library @<:@default=yes@:>@])],
+	[if test "$enableval" = yes ; then install_etree=yes; else install_etree=no; fi],
+	[install_etree=yes])
+AM_CONDITIONAL([INSTALL_ETREE], [test "$install_etree" = yes])
+AC_ARG_WITH([etree-incdir],
+  [AS_HELP_STRING([--with-etree-incdir], [directory containing Etree header files])],
+  [with_etree_incdir=$withval"],
+  [with_etree_incdir=no])
+AC_SUBST(with_etree_incdir)
+AC_ARG_WITH([etree-libdir],
+  [AS_HELP_STRING([--with-etree-libdir], [directory containing Etree library])],
+  [with_etree_libdir="$withval"],
+  [with_etree_libdir=no"])
 
-# Get required FFTW library and include locations
-AC_ARG_WITH([fftw-include-path],
-  [AS_HELP_STRING([--with-fftw-include-path],
-    [location of the FFTW headers])],
-  [FFTW_INCL="-I$withval"],
-  [FFTW_INCL=""])
-AC_ARG_WITH([fftw-lib-path],
-  [AS_HELP_STRING([--with-fftw-lib-path], [location of the FFTW libraries])],
-  [FFTW_LIB="-L$withval -lfftw3"],
-  [FFTW_LIB="-lfftw3"])
+dnl PROJ
+AC_ARG_ENABLE([proj],
+    [AC_HELP_STRING([--enable-proj],
+        [install Proj @<:@default=yes@:>@])],
+	[if test "$enableval" = "yes" ; then install_proj=yes; else install_proj=no; fi],
+	[install_proj=yes])
+AM_CONDITIONAL([INSTALL_PROJ], [test "$install_proj" = yes])
+AC_ARG_WITH([proj-incdir],
+    [AC_HELP_STRING([--with-proj-incdir], [directory containing Proj header files @<:@default=no@:>@])],
+	[with_proj_incdir=$withval],
+	[with_proj_incdir=no])
+AC_SUBST(with_proj_incdir)
+AC_ARG_WITH([proj-libdir],
+    [AC_HELP_STRING([--with-proj-libdir], [directory containing Proj library @<:@default=no@:>@])],
+	[with_proj_libdir=$withval],
+	[with_proj_libdir=no])
+AC_SUBST(with_proj_libdir)
 
-# Get USGS CenCalVM library, include, model locations
-if test "x$enable_model_cencal" = xyes; then
-AC_ARG_WITH([cencal-include-path],
-  [AS_HELP_STRING([--with-cencal-include-path],
-    [location of the USGS CenCalVM headers])],
-  [CENCAL_INCL="-I$withval"],
-  [CENCAL_INCL="/usr/include/cencalvm"])
-AC_ARG_WITH([cencal-lib-path],
-  [AS_HELP_STRING([--with-cencal-lib-path], [location of the USGS CenCalVM libraries])],
-  [CENCAL_LIB="-L$withval -lcencalvm -lstdc++"],
-  [CENCAL_LIB="-lcencalvm -lstdc++"])
-AC_ARG_WITH([cencal-model-path],
-  [AS_HELP_STRING([--with-cencal-model-path], [location of the USGS CenCalVM high-rez etree])],
-  [CENCAL_MODEL="$withval"],
-  [CENCAL_MODEL="/usr/cencalvm/high-rez.e"])
-AC_ARG_WITH([cencal-extmodel-path],
-  [AS_HELP_STRING([--with-cencal-extmodel-path], [location of the USGS CenCalVM extended etree])],
-  [CENCAL_EXTMODEL="$withval"],
-  [CENCAL_EXTMODEL="/usr/cencalvm/ext-model.e"])
-fi
+# FFTW
+AC_ARG_ENABLE([fftw],
+    [AC_HELP_STRING([--enable-fftw],
+        [install FFTW @<:@default=yes@:>@])],
+	[if test "$enableval" = yes ; then install_fftw=yes; else install_fftw=no; fi],
+	[install_fftw=yes])
+AM_CONDITIONAL([INSTALL_FFTW], [test "$install_fftw" = yes])
+AC_ARG_WITH([fftw-incdir],
+    [AC_HELP_STRING([--with-fftw-incdir],
+	[directory containing FFTW header files @<:@default=no@:>@])],
+	[with_fftw_incdir=$withval],
+	[with_fftw_incdir=no])
+AC_SUBST(with_fftw_incdir)
+AC_ARG_WITH([fftw-libdir],
+    [AC_HELP_STRING([--with-fftw-libdir],
+        [directory containing FFTW library @<:@default=no@:>@])],
+	[with_fftw_libdir=$withval],
+	[with_fftw_libdir=no])
+AC_SUBST(with_fftw_libdir)
 
-# Get SCEC CVM-H library and include locations
-if test "x$enable_model_cvmh" = xyes; then
-AC_ARG_WITH([cvmh-include-path],
-  [AS_HELP_STRING([--with-cvmh-include-path],
-    [location of the SCEC CVM-H headers])],
-  [CVMH_INCL="-I$withval"],
-  [CVMH_INCL="/usr/include/cvmh"])
-AC_ARG_WITH([cvmh-lib-path],
-  [AS_HELP_STRING([--with-cvmh-lib-path], [location of the SCEC CVM-H libraries])],
-  [CVMH_LIB="-L$withval -lvxapi"],
-  [CVMH_LIB="-lvxapi"])
-AC_ARG_WITH([cvmh-model-path],
-  [AS_HELP_STRING([--with-cvmh-model-path], [location of the SCEC CVM-H model files])],
-  [CVMH_MODEL="$withval"],
-  [CVMH_MODEL="/usr/cvmh/bin"])
+dnl NETCDF
+dnl AC_ARG_ENABLE([netcdf],
+dnl     [AC_HELP_STRING([--enable-netcdf],
+dnl         [install NetCDF @<:@default=yes@:>@])],
+dnl 	[if test "$enableval" = yes ; then install_netcdf=yes; else install_netcdf=no; fi],
+dnl 	[install_netcdf=no])
+dnl AM_CONDITIONAL([INSTALL_NETCDF], [test "$install_netcdf" = yes])
+dnl AC_ARG_WITH([netcdf-incdir],
+dnl     [AC_HELP_STRING([--with-netcdf-incdir],
+dnl 	[directory containing NetCDF header files @<:@default=no@:>@])],
+dnl 	[with_netcdf_incdir=$withval],
+dnl 	[with_netcdf_incdir=no])
+dnl AC_SUBST(with_netcdf_incdir)
+dnl AC_ARG_WITH([netcdf-libdir],
+dnl     [AC_HELP_STRING([--with-netcdf-libdir],
+dnl         [directory containing NetCDF library @<:@default=no@:>@])],
+dnl 	[with_netcdf_libdir=$withval],
+dnl 	[with_netcdf_libdir=no])
+dnl AC_SUBST(with_netcdf_libdir)
 
-# Get GCTPC projection library location (CVM-H dependency)
-AC_ARG_WITH([gctpc-lib-path],
-  [AS_HELP_STRING([--with-gctpc-lib-path], [location of the CVM-H GCTPC libraries (CVM-H 11.2.0)])],
-  [CVMH_LIB="$CVMH_LIB -L$withval -lgeo"],
-  [CVMH_LIB="$CVMH_LIB"])
-fi
+dnl AC_ARG_ENABLE([iobuf],
+dnl         [AS_HELP_STRING([--enable-iobuf],
+dnl         [enable IOBUF module])],
+dnl         [enable_iobuf=yes],
+dnl         [enable_iobuf=no])
 
-# Get SCEC CVM-S library and include locations
-if test "x$enable_model_cvms" = xyes; then
-AC_ARG_WITH([cvms-include-path],
-  [AS_HELP_STRING([--with-cvms-include-path],
-    [location of the SCEC CVM-S headers])],
-  [CVMS_INCL="-I$withval"],
-  [CVMS_INCL="/usr/include/cvms"])
-AC_ARG_WITH([cvms-lib-path],
-  [AS_HELP_STRING([--with-cvms-lib-path], [location of the SCEC CVM-S libraries])],
-  [CVMS_LIB="-L$withval -lcvms -lgfortran"],
-  [CVMS_LIB="-lcvms -gfortran"])
-AC_ARG_WITH([cvms-model-path],
-  [AS_HELP_STRING([--with-cvms-model-path], [location of the SCEC CVM-S model files])],
-  [CVMS_MODEL="$withval"],
-  [CVMS_MODEL="/usr/cvms/src"])
-fi
+dnl
+dnl Compilers and command line tools
+dnl
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_PROG_INSTALL
+AC_PROG_MKDIR_P
+AC_CANONICAL_HOST
 
-# Get SCEC CVM-SI library and include locations
-if test "x$enable_model_cvmsi" = xyes; then
-AC_ARG_WITH([cvmsi-include-path],
-  [AS_HELP_STRING([--with-cvmsi-include-path],
-    [location of the SCEC CVM-SI headers])],
-  [CVMSI_INCL="-I$withval"],
-  [CVMSI_INCL="/usr/include/cvmsi"])
-AC_ARG_WITH([cvmsi-lib-path],
-  [AS_HELP_STRING([--with-cvmsi-lib-path], [location of the SCEC CVM-SI libraries])],
-  [CVMSI_LIB="-L$withval -lcvmsi -lgfortran"],
-  [CVMSI_LIB="-lcvmsi -lgfortran"])
-AC_ARG_WITH([cvmsi-model-path],
-  [AS_HELP_STRING([--with-cvmsi-model-path], [location of the SCEC CVM-SI model files])],
-  [CVMSI_MODEL="$withval"],
-  [CVMSI_MODEL="/usr/cvmsi/model"])
-fi
+#if test "$fortran_required" = yes; then
+#   AC_PROJ_FC
+#fi
 
-# Get SCEC IMPERIAL library and include locations
-if test "x$enable_model_ivlsu" = xyes; then
-AC_ARG_WITH([ivlsu-include-path],
-  [AS_HELP_STRING([--with-ivlsu-include-path],
-    [location of the SCEC IMPERIAL headers])],
-  [IVLSU_INCL="-I$withval"],
-  [IVLSU_INCL="/usr/include/ivlsu"])
-AC_ARG_WITH([ivlsu-lib-path],
-  [AS_HELP_STRING([--with-ivlsu-lib-path], [location of the SCEC IMPERIAL libraries])],
-  [IVLSU_LIB="-L$withval -livlsu -lproj"],
-  [IVLSU_LIB="-livlsu -lproj"])
-fi
-
-# Get SCEC COACHELLA library and include locations
-if test "x$enable_model_cvlsu" = xyes; then
-AC_ARG_WITH([cvlsu-include-path],
-  [AS_HELP_STRING([--with-coachell-include-path],
-    [location of the SCEC COACHELLA headers])],
-  [CVLSU_INCL="-I$withval"],
-  [CVLSU_INCL="/usr/include/cvlsu"])
-AC_ARG_WITH([cvlsu-lib-path],
-  [AS_HELP_STRING([--with-cvlsu-lib-path], [location of the SCEC COACHELLA libraries])],
-  [CVLSU_LIB="-L$withval -lcvlsu"],
-  [CVLSU_LIB="-lcvlsu"])
-fi
-
-# Get SCEC ALBACORE library and include locations
-if test "x$enable_model_albacore" = xyes; then
-AC_ARG_WITH([albacore-include-path],
-  [AS_HELP_STRING([--with-albacore-include-path],
-    [location of the SCEC ALBACORE headers])],
-  [ALBACORE_INCL="-I$withval"],
-  [ALBACORE_INCL="/usr/include/albacore"])
-AC_ARG_WITH([albacore-lib-path],
-  [AS_HELP_STRING([--with-albacore-lib-path], [location of the SCEC ALBACORE libraries])],
-  [ALBACORE_LIB="-L$withval -lalbacore -lproj -letree"],
-  [ALBACORE_LIB="-lalbacore -lproj -letree"])
-fi
-
-# Get SCEC CVM-S5 library and include locations
-if test "x$enable_model_cvms5" = xyes; then
-AC_ARG_WITH([cvms5-include-path],
-  [AS_HELP_STRING([--with-cvms5-include-path],
-    [location of the SCEC CVM-S5 headers])],
-  [CVMS5_INCL="-I$withval"],
-  [CVMS5_INCL="/usr/include/cvms5"])
-AC_ARG_WITH([cvms5-lib-path],
-  [AS_HELP_STRING([--with-cvms5-lib-path], [location of the SCEC CVM-S5 libraries])],
-  [CVMS5_LIB="-L$withval -lcvms5 -lgfortran -lproj -letree"],
-  [CVMS5_LIB="-lcvms5 -lgfortran -lproj -letree"])
-fi
-
-# Get SCEC CCA library and include locations
-if test "x$enable_model_cca" = xyes; then
-AC_ARG_WITH([cca-include-path],
-  [AS_HELP_STRING([--with-cca-include-path],
-    [location of the SCEC CCA headers])],
-  [CCA_INCL="-I$withval"],
-  [CCA_INCL="/usr/include/cca"])
-AC_ARG_WITH([cca-lib-path],
-  [AS_HELP_STRING([--with-cca-lib-path], [location of the SCEC CCA libraries])],
-  [CCA_LIB="-L$withval -lcca -lgfortran -lproj -letree"],
-  [CCA_LIB="-lcca -lgfortran -lproj -letree"])
-fi
-
-# Get SCEC CS173 library and include locations
-if test "x$enable_model_cs173" = xyes; then
-AC_ARG_WITH([cs173-include-path],
-  [AS_HELP_STRING([--with-cs173-include-path],
-    [location of the SCEC CS173 headers])],
-  [CS173_INCL="-I$withval"],
-  [CS173_INCL="/usr/include/cs173"])
-AC_ARG_WITH([cs173-lib-path],
-  [AS_HELP_STRING([--with-cs173-lib-path], [location of the SCEC CS173 libraries])],
-  [CS173_LIB="-L$withval -lcs173 -lgfortran -lproj -letree"],
-  [CS173_LIB="-lcs173 -lgfortran -lproj -letree"])
-fi
-
-# Get SCEC CS173H library and include locations
-if test "x$enable_model_cs173h" = xyes; then
-AC_ARG_WITH([cs173h-include-path],
-  [AS_HELP_STRING([--with-cs173h-include-path],
-    [location of the SCEC CS173H headers])],
-  [CS173H_INCL="-I$withval"],
-  [CS173H_INCL="/usr/include/cs173h"])
-AC_ARG_WITH([cs173h-lib-path],
-  [AS_HELP_STRING([--with-cs173h-lib-path], [location of the SCEC CS173H libraries])],
-  [CS173H_LIB="-L$withval -lcs173h -lgfortran -lproj -letree"],
-  [CS173H_LIB="-lcs173h -lgfortran -lproj -letree"])
-fi
-
-
-# Get SCEC CVM-NCI library and include locations
-if test "x$enable_model_cvmnci" = xyes; then
-AC_ARG_WITH([cvmnci-include-path],
-  [AS_HELP_STRING([--with-cvmnci-include-path],
-    [location of the SCEC CVM-NCI headers])],
-  [CVMNCI_INCL="-I$withval"],
-  [CVMNCI_INCL="/usr/include/cvmnci"])
-AC_ARG_WITH([cvmnci-lib-path],
-  [AS_HELP_STRING([--with-cvmnci-lib-path], [location of the SCEC CVM-NCI libraries])],
-  [CVMNCI_LIB="-L$withval -lcvmnci"],
-  [CVMNCI_LIB="-lcvmnci"])
-AC_ARG_WITH([cvmnci-model-path],
-  [AS_HELP_STRING([--with-cvmnci-model-path], [location of the SCEC CVM-NCI model files])],
-  [CVMNCI_MODEL="$withval"],
-  [CVMNCI_MODEL="/usr/cvmnci/model"])
-fi
-
-# Get WFCVM library and include locations
-if test "x$enable_model_wfcvm" = xyes; then
-AC_ARG_WITH([wfcvm-include-path],
-  [AS_HELP_STRING([--with-wfcvm-include-path],
-    [location of the WFCVM headers])],
-  [WFCVM_INCL="-I$withval"],
-  [WFCVM_INCL="/usr/include/wfcvm"])
-AC_ARG_WITH([wfcvm-lib-path],
-  [AS_HELP_STRING([--with-wfcvm-lib-path], [location of the WFCVM libraries])],
-  [WFCVM_LIB="-L$withval -lwfcvm -lgfortran"],
-  [WFCVM_LIB="-lwfcvm -lgfortan"])
-AC_ARG_WITH([wfcvm-model-path],
-  [AS_HELP_STRING([--with-wfcvm-model-path], [location of the WFCVM model files])],
-  [WFCVM_MODEL="$withval"],
-  [WFCVM_MODEL="/usr/wfcvm/src"])
-fi
-
-# Get CVMLT library and include locations
-if test "x$enable_model_cvmlt" = xyes; then
-AC_ARG_WITH([cvmlt-include-path],
-  [AS_HELP_STRING([--with-cvmlt-include-path],
-    [location of the CVMLT headers])],
-  [CVMLT_INCL="-I$withval"],
-  [CVMLT_INCL="/usr/include/cvmlt"])
-AC_ARG_WITH([cvmlt-lib-path],
-  [AS_HELP_STRING([--with-cvmlt-lib-path], [location of the CVMLT libraries])],
-  [CVMLT_LIB="-L$withval -lcvmlt"],
-  [CVMLT_LIB="-lcvmlt"])
-AC_ARG_WITH([cvmlt-model-path],
-  [AS_HELP_STRING([--with-cvmlt-model-path], [location of the CVMLT model files])],
-  [CVMLT_MODEL="$withval"],
-  [CVMLT_MODEL="/usr/cvmlt/model"])
-fi
-
-# Get CMRG library and include locations
-if test "x$enable_model_cmrg" = xyes; then
-AC_ARG_WITH([cmrg-include-path],
-  [AS_HELP_STRING([--with-cmrg-include-path],
-    [location of the CMRG headers])],
-  [CMRG_INCL="-I$withval"],
-  [CMRG_INCL="/usr/include/cmrg"])
-AC_ARG_WITH([cmrg-lib-path],
-  [AS_HELP_STRING([--with-cmrg-lib-path], [location of the CMRG libraries])],
-  [CMRG_LIB="-L$withval -lcmrg"],
-  [CMRG_LIB="-lcmrg"])
-AC_ARG_WITH([cmrg-model-path],
-  [AS_HELP_STRING([--with-cmrg-model-path], [location of the CMRG model files])],
-  [CMRG_MODEL="$withval"],
-  [CMRG_MODEL="/usr/cmrg/model"])
-fi
-
-# Get Tape library and include locations
-if test "x$enable_model_tape" = xyes; then
-AC_ARG_WITH([tape-include-path],
-  [AS_HELP_STRING([--with-tape-include-path],
-    [location of the TAPE headers])],
-  [TAPE_INCL="-I$withval"],
-  [TAPE_INCL="/usr/include/tape"])
-AC_ARG_WITH([tape-lib-path],
-  [AS_HELP_STRING([--with-tape-lib-path], [location of the TAPE libraries])],
-  [TAPE_LIB="-L$withval -ltape"],
-  [TAPE_LIB="-ltape"])
-AC_ARG_WITH([tape-model-path],
-  [AS_HELP_STRING([--with-tape-model-path], [location of the TAPE model files])],
-  [TAPE_MODEL="$withval"],
-  [TAPE_MODEL="/usr/tape/model"])
-fi
-
-# Make model paths visible to makefiles
-AC_SUBST(CENCAL_MODEL)
-AC_SUBST(CENCAL_EXTMODEL)
-AC_SUBST(CVMH_MODEL)
-AC_SUBST(CVMS_MODEL)
-AC_SUBST(CVMSI_MODEL)
-AC_SUBST(CVMNCI_MODEL)
-AC_SUBST(WFCVM_MODEL)
-AC_SUBST(CVMLT_MODEL)
-AC_SUBST(CMRG_MODEL)
-AC_SUBST(TAPE_MODEL)
-
-# Setup compiler/linker flags
-if test "x$enable_static" = xyes; then
-   LDFLAGS="-static $LDFLAGS"
-fi
-if test "x$enable_dynamic" = xyes; then
-   LDFLAGS="-dynamic $LDFLAGS"
-fi
-if test "x$enable_iobuf" = xyes; then
-   AC_DEFINE(USE_IOBUF_MACROS, 1)
-fi
-
-# Save copy of CFLAGS and LDFLAGS
-CHECK_CFLAGS="-Wall -O3 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
-CHECK_LDFLAGS="$LDFLAGS"
-
-# Check required ETREE installation
-CFLAGS="$ETREE_INCL $CHECK_CFLAGS"
-LDFLAGS="$CHECK_LDFLAGS $ETREE_LIB"
-AC_CHECK_LIB(etree, etree_open, [AC_CHECK_HEADER([etree.h], [], [AC_MSG_ERROR(["Etree headers not found in $ETREE_INCL; use --with-etree-include-path"])], [AC_INCLUDES_DEFAULT])],[AC_MSG_ERROR(["Etree library not found; use --with-etree-lib-path"])])
-
-# Check required FFTW installation
-CFLAGS="$FFTW_INCL $CHECK_CFLAGS"
-LDFLAGS="$CHECK_LDFLAGS $FFTW_LIB"
-AC_CHECK_LIB(fftw3, fftw_execute, [AC_CHECK_HEADER([fftw3.h], [], [AC_MSG_ERROR(["FFTW headers not found in $FFTW_INCL; use --with-fftw-include-path"])], [AC_INCLUDES_DEFAULT])],[AC_MSG_ERROR(["FFTW library not found; use --with-fftw-lib-path"])])
-
-# Check required PROJ4 installation
-CFLAGS="$PROJ4_INCL $CHECK_CFLAGS"
-LDFLAGS="$CHECK_LDFLAGS $PROJ4_LIB"
-AC_CHECK_LIB(proj, pj_init_plus, [AC_CHECK_HEADER([proj_api.h], [], [AC_MSG_ERROR(["Proj4 header not found in $PROJ4_INCL; use --with-proj4-include-path"])
-  ], [AC_INCLUDES_DEFAULT])],[AC_MSG_ERROR(["Proj4 library not found; use --with-proj4-lib-path"])], [-lpthread -lm])
-
-# Check optional NetCDF library
-if test "x$enable_netcdf" = xyes; then
-   echo "Checking for NetCDF library"
-   CFLAGS="$NETCDF_INCL $CHECK_CFLAGS"
-   LDFLAGS="$CHECK_LDFLAGS $NETCDF_LIB"
-   AC_CHECK_LIB(netcdf, nc_create,
-	[AM_CONDITIONAL(UCVM_HAVE_NETCDF, true)], 
-	[AC_MSG_ERROR([NetCDF library not found; use --with-netcdf-include-path"])],
-	[-lhdf5_hl -lhdf5 -lz -lm -lcurl -ldl])
-   AC_CHECK_HEADER(netcdf.h,
-	[],
-	[AC_MSG_ERROR([NetCDF header not found; use --with-netcdf-lib-path"])],
-	[AC_INCLUDES_DEFAULT])
-
+AM_CONDITIONAL([BUILD_SHARED_LIBRARY], [test "$enable_shared" = yes])
+if test "$enable_shared" = yes; then
+  AC_MSG_NOTICE("Building shared libraries")
+  case $host_os in
+    darwin*)
+      SHARED_LIBRARY_EXT="dylib"
+    ;;
+    linux*)
+      SHARED_LIBRARY_EXT="so"
+    ;;
+    *)
+      SHARED_LIBRARY_EXT="so"
+    ;;
+  esac
+  AC_MSG_NOTICE("Assuming shared libraries have extension '$SHARED_LIBRARY_EXT'")
+  AC_SUBST(SHARED_LIBRARY_EXT)
 else
-	AM_CONDITIONAL(UCVM_HAVE_NETCDF, false)
+  AC_MSG_WARN("Building shared libraries not enabled.")
 fi
 
-# Set final CFLAGS and LDFLAGS
-CFLAGS="$CHECK_CFLAGS $ETREE_INCL $PROJ4_INCL $FFTW_INCL"
-LDFLAGS="$CHECK_LDFLAGS $ETREE_LIB $PROJ4_LIB $FFTW_LIB"
-if test "x$enable_netcdf" = xyes; then
-   CFLAGS="$CFLAGS $NETCDF_INCL"
-   LDFLAGS="$LDFLAGS $NETCDF_LIB"
+dnl curl
+AC_PATH_PROG(CURL, curl)
+if test -z "$CURL" ; then
+  AC_MSG_FAILURE([cannot find 'curl' program.])
+  CURL=`echo "Error: curl is not installed." ; false`
 fi
-LDFLAGS="$LDFLAGS -lm"
 
-# Check optional USGS CenCalVM installation
-if test "x$enable_model_cencal" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CENCAL_INCL $CFLAGS"
-   LDFLAGS="$CENCAL_LIB $LDFLAGS"
+dnl TAR
+AC_PATH_PROG(TAR, tar)
+if test -z "$TAR" ; then
+  AC_MSG_FAILURE([cannot find 'tar' program.])
+  TAR=`echo "Error: tar is not installed." ; false`
+fi
 
-   echo "Checking for USGS CenCalVM"
-   AC_CHECK_LIB(cencalvm, cencalvm_createQuery, [AM_CONDITIONAL(UCVM_AM_ENABLE_CENCAL, true)], [AC_MSG_ERROR(["USGS CenCalVM library not found; use --with-cencal-lib-path"])], [-lstdc++ -lpthread -letree -lproj -lm])
-   AC_CHECK_HEADER(cvmquery.h, [], [AC_MSG_ERROR(["USGS CenCalVM header not found; use --with-cencal-include-path"])], [AC_INCLUDES_DEFAULT])
+dnl MPI
+AX_PROG_CC_MPI([true],[use_mpi=yes],[use_mpi=no])
+AM_CONDITIONAL(UCVM_HAVE_MPI, [test x"$use_mpi" = xyes])
 
-   AC_CHECK_FILE([$CENCAL_MODEL], [], [AC_MSG_ERROR(["USGS CenCalVM model etree not found; use --with-cencal-model-path"])])
-   AC_CHECK_FILE([$CENCAL_EXTMODEL], [], [AC_MSG_ERROR(["USGS CenCalVM extmodel etree not found; use --with-cencal-extmodel-path"])])
+dnl
+dnl Verify configuration
+dnl
 
+dnl ETREE (required)
+if test "$install_etree" = yes ; then
+  ETREE_INCLUDES=""
+  ETREE_LDFLAGS="-letree"
 else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CENCAL, false)
+  if test "$with_etree_incdir" != no ; then
+    ETREE_INCLUDES="-I$with_etree_incdir"
+  fi
+  if test"$with_etree_libdir" != no ; then
+    ETREE_LDFLAGS="-L$with_etree_libdir -letree"
+  fi
+  SCEC_ETREE_HEADER
+  SCEC_ETREE_LIB
 fi
+AC_SUBST(ETREE_INCLUDES)
+AC_SUBST(ETREE_LDFLAGS)
 
-# Check optional SCEC CVM-H installation
-if test "x$enable_model_cvmh" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMH_INCL $CFLAGS"
-   LDFLAGS="$CVMH_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CVM-H"
-   AC_CHECK_LIB(vxapi, vx_getcoord,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMH, true)], [AC_MSG_ERROR(["SCEC CVM-H / GCTPC library not found; use --with-cvmh-lib-path and --with-gctpc-lib-path"])], [-lgeo -lm])
-   AC_CHECK_HEADER(vx_sub.h, [], [AC_MSG_ERROR(["SCEC CVM-H header not found; use --with-cvmh-include-path"])], [AC_INCLUDES_DEFAULT])
-
-   AC_CHECK_FILE([$CVMH_MODEL], [], [AC_MSG_ERROR(["SCEC CVM-H model dir not found; use --with-cvmh-model-path"])])
+dnl PROJ (required)
+if test "$install_proj" = yes ; then
+  PROJ_INCLUDES=""
+  PROJ_LDFLAGS="-lproj"
 else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMH, false)
+  if test "$with_proj_incdir" != no ; then
+    PROJ_INCLUDES="-I$with_proj_incdir"
+  fi
+  if test"$with_proj_libdir" != no ; then
+    PROJ_LDFLAGS="-L$with_proj_libdir -lproj"
+  fi
+  SCEC_PROJ_HEADER
+  SCEC_PROJ_LIB
 fi
+AC_SUBST(PROJ_INCLUDES)
+AC_SUBST(PROJ_LDFLAGS)
 
-# Check optional SCEC CVM-S installation
-if test "x$enable_model_cvms" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMS_INCL $CFLAGS"
-   LDFLAGS="$CVMS_LIB $LDFLAGS"
+dnl Check required FFTW installation
+dnl CFLAGS="$FFTW_INCL $CHECK_CFLAGS"
+dnl LDFLAGS="$CHECK_LDFLAGS $FFTW_LIB"
+dnl AC_CHECK_LIB(fftw3, fftw_execute, [AC_CHECK_HEADER([fftw3.h], [], [AC_MSG_ERROR(["FFTW headers not found in $FFTW_INCL; use --with-fftw-include-path"])], [AC_INCLUDES_DEFAULT])],[AC_MSG_ERROR(["FFTW library not found; use --with-fftw-lib-path"])])
 
-   echo "Checking for SCEC CVM-S"
-   AC_CHECK_LIB(cvms,cvms_init_,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMS, true)],[AC_MSG_ERROR(["SCEC CVM-S library requires C compiler that can link Fortran libraries"])],[-lgfortran -lm])
-   AC_CHECK_HEADER(cvms.h,[],[AC_MSG_ERROR(["SCEC CVM-S header not found; use --with-cvms-include-path"])],[AC_INCLUDES_DEFAULT])
-   AC_CHECK_FILE([$CVMS_MODEL], [], [AC_MSG_ERROR(["SCEC CVM-S model dir not found; use --with-cvms-model-path"])])
+dnl # Check optional NetCDF library
+dnl if test "x$enable_netcdf" = xyes; then
+dnl    echo "Checking for NetCDF library"
+dnl    CFLAGS="$NETCDF_INCL $CHECK_CFLAGS"
+dnl    LDFLAGS="$CHECK_LDFLAGS $NETCDF_LIB"
+dnl    AC_CHECK_LIB(netcdf, nc_create,
+dnl 	[AM_CONDITIONAL(UCVM_HAVE_NETCDF, true)], 
+dnl 	[AC_MSG_ERROR([NetCDF library not found; use --with-netcdf-include-path"])],
+dnl 	[-lhdf5_hl -lhdf5 -lz -lm -lcurl -ldl])
+dnl    AC_CHECK_HEADER(netcdf.h,
+dnl 	[],
+dnl 	[AC_MSG_ERROR([NetCDF header not found; use --with-netcdf-lib-path"])],
+dnl 	[AC_INCLUDES_DEFAULT])
+
+dnl else
+dnl 	AM_CONDITIONAL(UCVM_HAVE_NETCDF, false)
+dnl fi
+
+dnl
+dnl Setup environment so dependencies are used in build
+dnl
+CPPFLAGS="-I$prefix/include $CPPFLAGS"
+LDFLAGS="-L$prefix/lib -L$prefix/lib64 $LDFLAGS"
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+
+dnl
+dnl Create setup.sh
+dnl
+
+echo "#!/bin/bash" > setup.sh
+
+TEMPVAR="$prefix/bin"
+if test "X${PATH}" = X ; then
+  echo "export PATH=$TEMPVAR" >> setup.sh
 else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMS, false)
+  echo "export PATH=$TEMPVAR:\${PATH}" >> setup.sh
 fi
 
-# Check optional SCEC CVM-SI installation
-if test "x$enable_model_cvmsi" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMSI_INCL $CFLAGS"
-   LDFLAGS="$CVMSI_LIB $LDFLAGS"
+case $host_os in
+  darwin*)
+    ;;
+  *)
+    TEMPVAR="$prefix/lib:$prefix/lib64"
+    if test "X${LD_LIBRARY_PATH}" = X ; then
+      echo "export LD_LIBRARY_PATH=$TEMPVAR" >> setup.sh
+    else
+      echo "export LD_LIBRARY_PATH=$TEMPVAR:\${LD_LIBRARY_PATH}" >> setup.sh
+    fi
+    ;;
+esac
 
-   echo "Checking for SCEC CVM-SI"
-   AC_CHECK_LIB(cvmsi,utm_geo_,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMSI, true)],[AC_MSG_ERROR(["SCEC CVM-SI library requires C compiler that can link Fortran libraries"])],[-lgfortran -lm])
-   echo "Checking for SCEC CVM-SI header"
-   AC_CHECK_HEADER(cvmsi.h,[],[AC_MSG_ERROR(["SCEC CVM-SI header not found; use --with-cvmsi-include-path"])],[AC_INCLUDES_DEFAULT])
+dnl
+dnl Generate Makefiles
+dnl
 
-   echo "Checking for SCEC CVM-SI model directory"
-   AC_CHECK_FILE([$CVMSI_MODEL], [], [AC_MSG_ERROR(["SCEC CVM-SI model dir not found; use --with-cvmsi-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMSI, false)
-fi
-
-# Check optional SCEC IMPERIAL installation
-if test "x$enable_static" = xyes; then
-if test "x$enable_model_ivlsu" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$IVLSU_INCL $CFLAGS"
-   LDFLAGS="$IVLSU_LIB $LDFLAGS"
-
-   echo "Checking for SCEC IMPERIAL"
-   AC_CHECK_LIB(albacore, ivlsu_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_IVLSU, true)], [AC_MSG_ERROR(["SCEC IMPERIAL library not found; use --with-ivlsu-lib-path"])],[-lproj -letree -lm])
-   AC_CHECK_HEADER(ivlsu.h,[],[AC_MSG_ERROR(["SCEC IMPERIAL header not found; use --with-ivlsu-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_IVLSU, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_IVLSU, [test x"$enable_model_ivlsu" = xyes])
-fi
-
-# Check optional SCEC CVLSU installation
-if test "x$enable_static" = xyes; then
-if test "x$enable_model_cvlsu" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVLSU_INCL $CFLAGS"
-   LDFLAGS="$CVLSU_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CVLSU"
-   AC_CHECK_LIB(cvlsu, coachell_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVLSU, true)], [AC_MSG_ERROR(["SCEC CVLSU library not found; use --with-cvlsu-lib-path"])],[-lm])
-   AC_CHECK_HEADER(cvlsu.h,[],[AC_MSG_ERROR(["SCEC CVLSU header not found; use --with-cvlsu-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVLSU, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVLSU, [test x"$enable_model_cvlsu" = xyes])
-fi
-
-# Check optional SCEC ALBACORE installation
-if test "x$enable_static" = xyes; then
-if test "x$enable_model_albacore" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$ALBACORE_INCL $CFLAGS"
-   LDFLAGS="$ALBACORE_LIB $LDFLAGS"
-
-   echo "Checking for SCEC ALBACORE"
-   AC_CHECK_LIB(albacore, albacore_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_ALBACORE, true)], [AC_MSG_ERROR(["SCEC ALBACORE library not found; use --with-albacore-lib-path"])],[-lproj -letree -lm])
-   AC_CHECK_HEADER(albacore.h,[],[AC_MSG_ERROR(["SCEC ALBACORE header not found; use --with-albacore-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_ALBACORE, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_ALBACORE, [test x"$enable_model_albacore" = xyes])
-fi
-
-# Check optional SCEC CVM-S5 installation
-if test "x$enable_static" = xyes; then
-if test "x$enable_model_cvms5" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMS5_INCL $CFLAGS"
-   LDFLAGS="$CVMS5_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CVM-S5"
-   AC_CHECK_LIB(cvms5,utm_geo_,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMS5, true)],[AC_MSG_ERROR(["SCEC CVM-S5 library requires C compiler that can link Fortran libraries"])],[-lproj -letree -lgfortran -lm])
-   AC_CHECK_HEADER(cvms5.h,[],[AC_MSG_ERROR(["SCEC CVM-S5 header not found; use --with-cvms5-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMS5, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMS5, [test x"$enable_model_cvms5" = xyes])
-fi
-
-if test "x$enable_static" = xyes; then
-# Check optional SCEC CCA installation
-if test "x$enable_model_cca" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CCA_INCL $CFLAGS"
-   LDFLAGS="$CCA_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CCA"
-   AC_CHECK_LIB(cca,utm_geo_,[AM_CONDITIONAL(UCVM_AM_ENABLE_CCA, true)],[AC_MSG_ERROR(["SCEC CCA library requires C compiler that can link Fortran libraries"])],[-lproj -letree -lgfortran -lm])
-   AC_CHECK_HEADER(cca.h,[],[AC_MSG_ERROR(["SCEC CCA header not found; use --with-cca-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CCA, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CCA, [test x"$enable_model_cca" = xyes])
-fi
-
-if test "x$enable_static" = xyes; then
-# Check optional SCEC CS173 installation
-if test "x$enable_model_cs173" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CS173_INCL $CFLAGS"
-   LDFLAGS="$CS173_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CS173"
-   AC_CHECK_LIB(cs173, cs173_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CS173, true)], [AC_MSG_ERROR(["SCEC CS173 library requires a C compiler that can link Fortran libraries"])],[-lproj -letree -lgfortran -lm])
-   AC_CHECK_HEADER(cs173.h,[],[AC_MSG_ERROR(["SCEC CS173 header not found; use --with-cs173-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CS173, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CS173, [test x"$enable_model_cs173" = xyes])
-fi
-
-if test "x$enable_static" = xyes; then
-# Check optional SCEC CS173H installation
-if test "x$enable_model_cs173h" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CS173H_INCL $CFLAGS"
-   LDFLAGS="$CS173H_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CS173H"
-   AC_CHECK_LIB(cs173h, cs173h_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CS173H, true)], [AC_MSG_ERROR(["SCEC CS173H library requires a C compiler that can link Fortran libraries"])],[-lproj -letree -lgfortran -lm])
-   AC_CHECK_HEADER(cs173h.h,[],[AC_MSG_ERROR(["SCEC CS173H header not found; use --with-cs173h-include-path"])],[AC_INCLUDES_DEFAULT])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CS173H, false)
-fi
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CS173H, [test x"$enable_model_cs173h" = xyes])
-fi
-
-# Check optional SCEC CVM-NCI installation
-if test "x$enable_model_cvmnci" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMNCI_INCL $CFLAGS"
-   LDFLAGS="$CVMNCI_LIB $LDFLAGS"
-
-   echo "Checking for SCEC CVM-NCI"
-   AC_CHECK_LIB(cvmnci, cvmnci_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMNCI, true)], [AC_MSG_ERROR(["SCEC CVM-NCI library not found; use --with-cvmnci-lib-path"])],[-lm])
-   AC_CHECK_HEADER(cvmnci.h,[],[AC_MSG_ERROR(["SCEC CVM-NCI header not found; use --with-cvmnci-include-path"])],[AC_INCLUDES_DEFAULT])
-
-   AC_CHECK_FILE([$CVMNCI_MODEL], [], [AC_MSG_ERROR(["SCEC CVM-NCI model dir not found; use --with-cvmnci-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMNCI, false)
-fi
-
-# Check optional WFCVM installation
-if test "x$enable_model_wfcvm" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$WFCVM_INCL $CFLAGS"
-   LDFLAGS="$WFCVM_LIB $LDFLAGS"
-
-   echo "Checking for WFCVM"
-   AC_CHECK_LIB(wfcvm, wfcvm_init_,[AM_CONDITIONAL(UCVM_AM_ENABLE_WFCVM, true)],[AC_MSG_ERROR(["SCEC WFCVM library requires a C compiler that can link Fortran libraries"])],[-lgfortran -lm])
-   AC_CHECK_HEADER(wfcvm.h,[],[AC_MSG_ERROR(["WFCVM header not found; use --with-wfcvm-include-path"])],[AC_INCLUDES_DEFAULT])
-   AC_CHECK_FILE([$WFCVM_MODEL], [], [AC_MSG_ERROR(["WFCVM model dir not found; use --with-wfcvm-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_WFCVM, false)
-fi
-
-# Check optional CVMLT installation
-if test "x$enable_model_cvmlt" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CVMLT_INCL $CFLAGS"
-   LDFLAGS="$CVMLT_LIB $LDFLAGS"
-
-   echo "Checking for CVMLT"
-   AC_CHECK_LIB(cvmlt, cvmlt_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CVMLT, true)], [AC_MSG_ERROR(["CVMLT library not found; use --with-cvmlt-lib-path"])], [-lm])
-   AC_CHECK_HEADER(cvmlt.h,[],[AC_MSG_ERROR(["CVMLT header not found; use --with-cvmlt-include-path"])],[AC_INCLUDES_DEFAULT])
-
-   AC_CHECK_FILE([$CVMLT_MODEL], [], [AC_MSG_ERROR(["CVMLT model dir not found; use --with-cvmlt-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CVMLT, false)
-fi
-
-# Check optional CMRG installation
-if test "x$enable_model_cmrg" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$CMRG_INCL $CFLAGS"
-   LDFLAGS="$CMRG_LIB $LDFLAGS"
-
-   echo "Checking for CMRG"
-   AC_CHECK_LIB(cmrg, cmrg_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_CMRG, true)], [AC_MSG_ERROR(["CMRG library not found; use --with-cmrg-lib-path"])], [-lm])
-   AC_CHECK_HEADER(cmrg.h,[],[AC_MSG_ERROR(["CMRG header not found; use --with-cmrg-include-path"])],[AC_INCLUDES_DEFAULT])
-
-   AC_CHECK_FILE([$CMRG_MODEL], [], [AC_MSG_ERROR(["CMRG model dir not found; use --with-cmrg-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_CMRG, false)
-fi
-
-# Check optional Tape installation
-if test "x$enable_model_tape" = xyes; then
-   # Setup compiler/linker flags
-   CFLAGS="$TAPE_INCL $CFLAGS"
-   LDFLAGS="$TAPE_LIB $LDFLAGS"
-
-   echo "Checking for TAPE"
-   AC_CHECK_LIB(tape, tape_init,[AM_CONDITIONAL(UCVM_AM_ENABLE_TAPE, true)], [AC_MSG_ERROR(["TAPE library not found; use --with-tape-lib-path"])], [-lpthread -lproj -lm])
-   AC_CHECK_HEADER(tape.h,[],[AC_MSG_ERROR(["TAPE header not found; use --with-tape-include-path"])],[AC_INCLUDES_DEFAULT])
-
-   AC_CHECK_FILE([$TAPE_MODEL], [], [AC_MSG_ERROR(["TAPE model dir not found; use --with-tape-model-path"])])
-else
-   AM_CONDITIONAL(UCVM_AM_ENABLE_TAPE, false)
-fi
-
-# Link -ldl if needed.
-if test "x$enable_static" = xno; then
-   LDFLAGS="$LDFLAGS -ldl"
-fi
-
-AC_CONFIG_FILES([Makefile aux-config/Makefile conf/Makefile model/ucvm/Makefile model/1d/Makefile src/ucvm/Makefile src/ucvm2etree/Makefile src/ucvm2mesh/Makefile src/grd/Makefile src/grd2etree/Makefile src/patch/Makefile src/ecoalesce/Makefile src/ecompact/Makefile src/basin/Makefile test/Makefile examples/Makefile examples/api/Makefile examples/programs/basin/Makefile examples/programs/etree/Makefile examples/programs/ucvm/Makefile examples/programs/mesh/Makefile man/Makefile src/ssh/Makefile src/vs30/Makefile utilities/Makefile])
+AC_CONFIG_FILES([Makefile
+	dependencies/Makefile
+	src/Makefile
+	src/ucvm/Makefile
+	model/Makefile
+	model/1d/Makefile
+	model/ucvm/Makefile
+	model/cca/Makefile
+	model/cvmh/Makefile
+	man/Makefile
+	conf/Makefile
+	])
 
 AC_OUTPUT
 
+
+dnl
+dnl Write summary
+dnl
+
+echo ""
+echo "Models enabled:"
+echo "  SCEC CVM-H: $enable_model_cvmh"
+echo "  SCEC CCA: $enable_model_cca"
+echo ""
+echo "Dependencies to be installed:"
+echo "  Etree/Euclid (required): $install_etree"
+echo "  Proj (required): $install_proj"
+echo "  FFTW (required): $install_fftw"
+dnl echo "  NetCDF (optional): $install_netcdf"
+echo ""
+echo "UCVM and its dependencies will be installed to $prefix"
+echo ""
+echo "IMPORTANT"
+echo ""
+echo "  Step 1"
+echo "  BEFORE running \"make\", setup your environment so that all of the "
+echo "  dependencies are consistent. See the file setup.sh in this directory "
+echo "  for how to set your variables for the bash shell. You can either run "
+echo "  \"source setup.sh\" in this terminal (i.e., shell) where you will "
+echo "  build UCVM and it dependencies or add these settings to your "
+echo "  .bashrc or equivalent file and open a new terminal (i.e., shell)."
+echo ""
+echo "  Step 2"
+echo "  Running \"make\" will install UCVM and its dependencies along with "
+echo "  the requested models."
+echo ""
+echo "  Step 3"
+echo "  If you did not setup your .bashrc with the environment variables, be sure "
+echo "  to run \"source setup.sh\" every time you open a new terminal (i.e., shell) "
+echo "  BEFORE using the UCVM software."
+echo ""

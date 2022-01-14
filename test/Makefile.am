@@ -1,8 +1,30 @@
+# GNU Automake config
+
+SUBDIRS = \
+	inputs \
+	ref
+
+TESTS = unittest accepttest
+
 bin_PROGRAMS = unittest accepttest
 
-# General compiler/linker flags
-AM_CFLAGS = -I../src/ucvm
-AM_LDFLAGS = -L../src/ucvm -lucvm ${LDFLAGS}
+unittest_SOURCES = \
+	unittest.c \
+	unittest_suite_lib.c \
+	test_defs.c
+unittest_LDADD = $(top_builddir)/src/ucvm/libucvm.la
+
+accepttest_SOURCES = \
+	accepttest.c \
+	accepttest_suite_grid.c \
+	test_defs.c
+accepttest_LDADD = $(top_builddir)/src/ucvm/libucvm.la
+
+noinst_HEADERS = \
+	test_defs.h \
+	unittest_suite_lib.h \
+	accepttest_suite_grid.h
+
 
 # CENCALVM includes
 if UCVM_AM_ENABLE_CENCAL
@@ -84,47 +106,14 @@ if UCVM_AM_ENABLE_CS173H
 AM_CFLAGS += -D_UCVM_ENABLE_CS173H
 endif
 
-# Dist sources
-unittest_SOURCES = *.c *.h
-accepttest_SOURCES = *.c *.h
-
-all: $(bin_PROGRAMS)
 
 
-############################################
-# Executables
-############################################
-
-unittest: unittest.o test_defs.o unittest_suite_lib.o
-	$(CC) -o $@ $^ $(AM_LDFLAGS)
-
-accepttest: accepttest.o test_defs.o accepttest_suite_grid.o
-	$(CC) -o $@ $^ $(AM_LDFLAGS)
+#check: unittest accepttest
+#	@( cd ${prefix}/tests; source ../conf/ucvm_env.sh; \
+#		./unittest;\
+#		./accepttest;\
+#		./accept_test.py ${prefix}/tests;\
+#	)
 
 
-############################################
-# Special build targets
-############################################
-
-install:
-	mkdir -p ${prefix}/tests
-	cp -R -L inputs ${prefix}/tests
-	cp -R -L ref ${prefix}/tests
-	cp $(bin_PROGRAMS) ${prefix}/tests
-	cp *.py ${prefix}/tests/.
-	echo "#!/bin/bash " > ${prefix}/tests/run-testing 
-	echo "source ../conf/ucvm_env.sh" >> ${prefix}/tests/run-testing 
-	echo "./unittest" >> ${prefix}/tests/run-testing 
-	echo "./accepttest" >> ${prefix}/tests/run-testing 
-	echo "./accept_test.py ." >> ${prefix}/tests/run-testing 
-	chmod +x ${prefix}/tests/run-testing
-
-check: unittest accepttest
-	@( cd ${prefix}/tests; source ../conf/ucvm_env.sh; \
-		./unittest;\
-		./accepttest;\
-		./accept_test.py ${prefix}/tests;\
-	)
-
-clean:
-	rm -rf *~ *.o unittest accepttest
+# End of file

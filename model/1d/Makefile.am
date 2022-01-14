@@ -1,14 +1,8 @@
 # GNU Automake config
 
-EXTRA_DIST = 1d*
+subpkgdatadir = $(pkgdatadir)/model/1d
 
-all:
+subpkgdata_DATA = \
+	1d.conf \
+	bbp1d.conf
 
-install:
-	mkdir -p ${prefix}/model/1d
-	if ! test . -ef ${prefix}/model/1d; then \
-                cp 1d* ${prefix}/model/1d; \
-		cp bbp1d* ${prefix}/model/1d; \
-        fi
-
-clean:

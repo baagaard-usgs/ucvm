@@ -1,24 +1,31 @@
 # GNU Automake config
-#
 
-EXTRA_DIST = configure LICENSE
+ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = aux-config conf \
-	model/ucvm model/1d src/ucvm src/ucvm2etree \
-	src/ucvm2mesh src/grd src/grd2etree src/patch \
-	src/ecoalesce src/ecompact src/basin test examples man \
-	src/ssh src/vs30 \
-	utilities
+SUBDIRS = \
+	dependencies \
+	model \
+	src \
+	man \
+	conf
 
-TEST_SUBDIRS = test examples
-
-#INCLUDES = $(default_includes)
-AM_CPPFLAGS = $(default_includes)
-
-
-runcheck: $(TEST_SUBDIRS)
-	@for i in $(TEST_SUBDIRS); do \
-	  (cd $${i}; make -s check;) \
-	done
+#documentation
+#test
+#exmaples
+#utilities
 
 
+EXTRA_DIST = \
+	CHANGELOG.md \
+	CODE_OF_CONDUCT.md \
+	CONTRIBUTING.md \
+	CREDITS.md \
+	LICENSE.txt \
+	MODULES.md \
+	NEWS.md \
+	README.md \
+	codemeta.json \
+	conf/ucvm_template.conf
+
+
+# End of file
