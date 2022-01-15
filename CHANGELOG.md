@@ -1,3 +1,19 @@
+## 2022-01-XX Brad Aagaard <baagaard@usgs.gov>
+
+* Improve autotools integration
+  * Use libtool to build libraries (supports shared libraries on most modern Unix operating systems, including Linux and macOS)
+  * Eliminate Python scripts in installation (models are downloaded directly to installation location as part of installation using autotools)
+  * Install all libraries to $(prefix)/lib
+  * Install all models to $(prefix)/share/ucvm/model (use --datarootdir configure argument to customize location)
+* Install Proj datum files (improves accuracy of geographic coordinate transformations)
+* Clean up model configuration
+  * Replace per-model `modelpath` setting with single specification of the installation directory of libraries and base directory of model data files
+  * Remove `config` and `extconfig` from model configuration. Models can use parameters for model specific settings.
+* Clean up UCVM model plugin code
+  * Use `ucvmapi_` prefix for plugin functions called by UCVM.
+  * Eliminate superfluous code for getting addresses of functions from shared libraries.
+  * Remove redundant `ucvm_plugin` prefix for plugin model parameters.
+
 ## 2021-10-01  Mei-Hui Su <mei@usc.edu>
 * Rework largefiles get/check/stage to use setup.list
 
