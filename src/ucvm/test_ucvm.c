@@ -6,12 +6,6 @@
 #include "ucvm.h"
 #include "ucvm_model_1d.h"
 
-#ifdef _UCVM_ENABLE_CENCAL
-#include "ucvm_model_cencal.h"
-#endif
-#ifdef _UCVM_ENABLE_CVMH
-#include "ucvm_model_cvmh.h"
-#endif
 #ifdef _UCVM_ENABLE_CVMS
 #include "ucvm_model_cvms.h"
 #endif

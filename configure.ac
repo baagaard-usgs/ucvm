@@ -48,11 +48,12 @@ dnl         [enable model SCEC CS173H])],
 dnl         [enable_model_cs173h=yes],
 dnl         [enable_model_cs173h=no])
 
-dnl AC_ARG_ENABLE([model-cencal],
-dnl         [AS_HELP_STRING([--enable-model-cencal],
-dnl         [enable model USGS CenCalVM])],
-dnl         [enable_model_cencal=yes],
-dnl         [enable_model_cencal=no])
+AC_ARG_ENABLE([model-cencalvm],
+	[AC_HELP_STRING([--enable-model-cencalvm],
+		[enable use of USGS CenCalVM model @<:@default=no@:>@])],
+		[if test "$enableval" = "yes" ; then enable_model_cencalvm=yes; else enable_model_cencalvm=no; fi],
+		[enable_model_cencalvm=no])
+AM_CONDITIONAL([ENABLE_MODEL_CENCALVM], [test "$enable_model_cencalvm" = "yes"])
 
 dnl AC_ARG_ENABLE([model-cvmsi],
 dnl         [AS_HELP_STRING([--enable-model-cvmsi],
@@ -262,6 +263,15 @@ if test -z "$TAR" ; then
   TAR=`echo "Error: tar is not installed." ; false`
 fi
 
+if test $enable_model_cencalvm = yes; then
+dnl GUNZIP
+AC_PATH_PROG(GUNZIP, gunzip)
+if test -z "$GUNZIP" ; then
+  AC_MSG_FAILURE([cannot find 'gunzip' program.])
+  GUNZIP=`echo "Error: USGS CenCalVM requires gunzip to uncompress model. gunzip is not installed." ; false`
+fi
+fi
+
 dnl MPI
 AX_PROG_CC_MPI([true],[use_mpi=yes],[use_mpi=no])
 AM_CONDITIONAL(UCVM_HAVE_MPI, [test x"$use_mpi" = xyes])
@@ -364,8 +374,10 @@ dnl fi
 dnl
 dnl Setup environment so dependencies are used in build
 dnl
+CFLAGS="$CFLAGS"
 CPPFLAGS="-I$prefix/include $CPPFLAGS"
 LDFLAGS="-L$prefix/lib -L$prefix/lib64 $LDFLAGS"
+AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
 
@@ -404,11 +416,13 @@ AC_CONFIG_FILES([Makefile
 	dependencies/Makefile
 	src/Makefile
 	src/ucvm/Makefile
+  src/plugin_adapters/Makefile
 	model/Makefile
 	model/1d/Makefile
 	model/ucvm/Makefile
 	model/cca/Makefile
 	model/cvmh/Makefile
+  model/usgs_cencalvm/Makefile
 	man/Makefile
 	conf/Makefile
 	])
@@ -424,6 +438,7 @@ echo ""
 echo "Models enabled:"
 echo "  SCEC CVM-H: $enable_model_cvmh"
 echo "  SCEC CCA: $enable_model_cca"
+echo "  USGS CenCalVM: $enable_model_cencalvm"
 echo ""
 echo "Dependencies to be installed:"
 echo "  Etree/Euclid (required): $install_etree"

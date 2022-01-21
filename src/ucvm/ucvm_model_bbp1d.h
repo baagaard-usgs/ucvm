@@ -4,35 +4,43 @@
 #include <stdarg.h>
 #include "ucvm_dtypes.h"
 
+/* Create BBP 1D */
+int ucvm_bbp1d_model_create(int id,
+                            const char *lib_dir,
+                            const char *models_path,
+                            ucvm_modelconf_t *conf);
 
-/* Init BBP 1D */
-int ucvm_bbp1d_model_init(int id, const char *lib_dir, const char *models_path, ucvm_modelconf_t *conf);
-
+/* Initialize BBP 1D */
+int ucvm_bbp1d_model_initialize();
 
 /* Finalize BBP 1D */
 int ucvm_bbp1d_model_finalize();
 
-
 /* Version BBP 1D */
-int ucvm_bbp1d_model_version(int id, char *ver, int len);
-
+int ucvm_bbp1d_model_version(int id,
+                             char *ver,
+                             int len);
 
 /* Label BBP 1D */
-int ucvm_bbp1d_model_label(int id, char *lab, int len);
-
+int ucvm_bbp1d_model_label(int id,
+                           char *lab,
+                           int len);
 
 /* Setparam BBP 1D */
-int ucvm_bbp1d_model_setparam(int id, int param, ...);
-
+int ucvm_bbp1d_model_setparam(int id,
+                              int param,
+                              ...);
 
 /* Query BBP 1D */
-int ucvm_bbp1d_model_query(int id, ucvm_ctype_t cmode,
-			int n, ucvm_point_t *pnt, ucvm_data_t *data);
-
+int ucvm_bbp1d_model_query(int id,
+                           ucvm_ctype_t cmode,
+                           int n,
+                           ucvm_point_t *pnt,
+                           ucvm_data_t *data);
 
 /* Fill model structure with BBP 1D */
 int ucvm_bbp1d_get_model(ucvm_model_t *m);
 
-typedef enum { NONE = 0, LINEAR = 1 } ucvm_bbp1d_interpolation_t;
+typedef enum { NONE=0, LINEAR=1 } ucvm_bbp1d_interpolation_t;
 
 #endif

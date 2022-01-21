@@ -13,6 +13,7 @@
   * Use `ucvmapi_` prefix for plugin functions called by UCVM.
   * Eliminate superfluous code for getting addresses of functions from shared libraries.
   * Remove redundant `ucvm_plugin` prefix for plugin model parameters.
+  * Refactor `_init()` into `_create()` and `_initialize()` with model parameters set in between the calls to `_create()` and `_initialize()`.
 
 ## 2021-10-01  Mei-Hui Su <mei@usc.edu>
 * Rework largefiles get/check/stage to use setup.list

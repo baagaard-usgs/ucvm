@@ -47,19 +47,6 @@ if BUILD_SHARED_LIBRARY
 AM_CFLAGS += -DBUILD_SHARED_LIBRARY -DSHARED_LIBRARY_EXT=\"$(SHARED_LIBRARY_EXT)\"
 endif
 
-# CENCALVM includes
-#if ENABLE_CENCAL
-#AM_CFLAGS += -D_UCVM_ENABLE_CENCAL
-#libucvm_la_SOURCES += ucvm_model_cencal.c
-#endif
-
-# CVM-H includes
-if ENABLE_MODEL_CVMH
-AM_CFLAGS += -D_UCVM_ENABLE_CVMH
-libucvm_la_SOURCES += ucvm_model_cvmh.c
-libucvm_la_LIBADD = -lvxapi
-endif
-
 # CVM-S4 includes
 #if UCVM_AM_ENABLE_CVMS
 #AM_CFLAGS += -D_UCVM_ENABLE_CVMS
@@ -86,9 +73,19 @@ endif
 #AM_CFLAGS += -D_UCVM_ENABLE_CVMS5
 #endif
 
-# CCA includes
+# CVM-H
+if ENABLE_MODEL_CVMH
+AM_CFLAGS += -D_UCVM_ENABLE_CVMH
+endif
+
+# CCA
 if ENABLE_MODEL_CCA
 AM_CFLAGS += -D_UCVM_ENABLE_CCA
+endif
+
+# CENCALVM
+if ENABLE_MODEL_CENCALVM
+AM_CFLAGS += -D_UCVM_ENABLE_CENCALVM
 endif
 
 # CS173 includes

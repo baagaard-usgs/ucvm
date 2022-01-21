@@ -1,7 +1,8 @@
 # GNU Automake config
 
 SUBDIRS = \
-	ucvm
+	ucvm \
+	plugin_adapters
 
 
 # End of file
