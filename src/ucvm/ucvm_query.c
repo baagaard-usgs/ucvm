@@ -79,8 +79,8 @@ void
 usage() {
     printf("Usage: ucvm_query [-m models<:ifunc>] [-p user_map] [-c coordtype] [-f config] [-z zmin,zmax] < file.in\n\n");
     printf("Flags:\n");
-    printf("\t-h This help message.\n");
-    printf("\t-H Detail help message.\n");
+    printf("\t-h Show this help message.\n");
+    printf("\t-H Show detailed help message.\n");
     printf("\t-m Comma delimited list of crustal/GTL models to query in order\n");
     printf("\t   of preference. GTL models may optionally be suffixed with ':ifunc'\n");
     printf("\t   to specify interpolation function.\n");
@@ -100,8 +100,8 @@ void
 usage_detail() {
     printf("Usage: ucvm_query [-m models<:ifunc>] [-p user_map] [-c coordtype] [-f config] [-z zmin,zmax] [-b] < file.in\n\n");
     printf("Flags:\n");
-    printf("\t-h This help message.\n");
-    printf("\t-H Detail help message.\n");
+    printf("\t-h Show abbreviated help message.\n");
+    printf("\t-H Show this detailed help message.\n");
     printf("\t-m Comma delimited list of crustal/GTL models to query in order\n");
     printf("\t   of preference. GTL models may optionally be suffixed with ':ifunc'\n");
     printf("\t   to specify interpolation function.\n");
@@ -117,7 +117,7 @@ usage_detail() {
     printf("Output format is:\n");
     printf("\tlon lat Z surf vs30 crustal cr_vp cr_vs cr_rho gtl gtl_vp gtl_vs gtl_rho cmb_algo cmb_vp cmb_vs cmb_rho\n\n");
     printf("Notes:\n");
-    printf("\t- If running interactively, type Cntl-D to end input coord list.\n\n");
+    printf("\t- If running interactively, type Cntl-D to end input coordinate list.\n\n");
     printf("Version: %s\n\n", VERSION);
     disp_resources(0);
     exit(0);

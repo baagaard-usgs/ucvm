@@ -1,7 +1,5 @@
-#ifndef UCVM_DTYPES_H
+#if !defined(UCVM_DTYPES_H)
 #define UCVM_DTYPES_H
-
-#include <stdarg.h>
 
 /* Maximum number of supported models */
 #define UCVM_MAX_MODELS 20
@@ -100,7 +98,7 @@ typedef enum { UCVM_CODE_SUCCESS=0,
                UCVM_CODE_DATAGAP,
                UCVM_CODE_NODATA } ucvm_code_t;
 
-/* Supported coordinate query modes */
+/* Supported coordinate modes */
 typedef enum { UCVM_COORD_GEO_DEPTH=0,
                UCVM_COORD_GEO_ELEV } ucvm_ctype_t;
 
