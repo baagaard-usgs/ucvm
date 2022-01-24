@@ -38,7 +38,7 @@ ucvm_cmuetree_model_create(int id,
                            const char *lib_dir,
                            const char *models_dir,
                            ucvm_modelconf_t *conf) {
-    int i, len;
+    int i;
     char filename[UCVM_MAX_PATH_LEN];
     char *appmeta;
 
@@ -200,23 +200,13 @@ ucvm_cmuetree_model_label(int id,
 
 /* Setparam Cmuetree */
 int
-ucvm_cmuetree_model_setparam(int id,
-                             int param,
-                             ...) {
-    va_list ap;
-
+ucvm_cmuetree_model_set_parameter(int id,
+                                  const char *name,
+                                  const char *value) {
     if (id != ucvm_cmuetree_id) {
         fprintf(stderr, "Invalid model id\n");
         return (UCVM_CODE_ERROR);
     }
-
-    va_start(ap, param);
-    switch (param) {
-    default:
-        break;
-    }
-
-    va_end(ap);
 
     return (UCVM_CODE_SUCCESS);
 }
@@ -228,7 +218,8 @@ ucvm_cmuetree_model_query(int id,
                           ucvm_ctype_t cmode,
                           int n,
                           ucvm_point_t *pnt,
-                          ucvm_data_t *data) {
+                          ucvm_data_t *data,
+                          ucvm_query_flags_t *qflags) {
     int i;
     double depth;
     ucvm_point_t xy;
@@ -322,9 +313,9 @@ ucvm_cmuetree_get_model(ucvm_model_t *m) {
     m->create = ucvm_cmuetree_model_create;
     m->initialize = ucvm_cmuetree_model_initialize;
     m->finalize = ucvm_cmuetree_model_finalize;
-    m->setparam = ucvm_cmuetree_model_setparam;
-    m->getversion = ucvm_cmuetree_model_version;
-    m->getlabel = ucvm_cmuetree_model_label;
+    m->set_parameter = ucvm_cmuetree_model_set_parameter;
+    m->get_version = ucvm_cmuetree_model_version;
+    m->get_label = ucvm_cmuetree_model_label;
     m->query = ucvm_cmuetree_model_query;
 
     return (UCVM_CODE_SUCCESS);

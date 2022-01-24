@@ -1,4 +1,4 @@
-#ifndef UCVM_MODEL_1DGTL_H
+#if !defined(UCVM_MODEL_1DGTL_H)
 #define UCVM_MODEL_1DGTL_H
 
 #include <stdarg.h>
@@ -26,17 +26,18 @@ int ucvm_1dgtl_model_label(int id,
                            char *lab,
                            int len);
 
-/* Setparam 1DGTL */
-int ucvm_1dgtl_model_setparam(int id,
-                              int param,
-                              ...);
+/* Set_parameter 1DGTL */
+int ucvm_1dgtl_model_set_parameter(int id,
+                                   const char *name,
+                                   const char *value);
 
 /* Query 1DGTL */
 int ucvm_1dgtl_model_query(int id,
                            ucvm_ctype_t cmode,
                            int n,
                            ucvm_point_t *pnt,
-                           ucvm_data_t *data);
+                           ucvm_data_t *data,
+                           ucvm_query_flags_t *qflags);
 
 /* Fill model structure with 1DGTL */
 int ucvm_1dgtl_get_model(ucvm_model_t *m);

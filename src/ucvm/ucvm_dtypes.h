@@ -1,6 +1,8 @@
 #if !defined(UCVM_DTYPES_H)
 #define UCVM_DTYPES_H
 
+#include "ucvm_plugin_dtypes.h"
+
 /* Maximum number of supported models */
 #define UCVM_MAX_MODELS 20
 
@@ -27,10 +29,6 @@
 
 /* Maximum model list length */
 #define UCVM_MAX_MODELLIST_LEN 1024
-
-/* Default depth (m) for GTL/Crustal transition */
-#define UCVM_DEFAULT_INTERP_ZMIN 0.0
-#define UCVM_DEFAULT_INTERP_ZMAX 0.0
 
 /* Special source model/ifunc flags */
 #define UCVM_SOURCE_NONE -1
@@ -113,29 +111,6 @@ typedef enum { UCVM_RESOURCE_MODEL=0,
                UCVM_RESOURCE_MODEL_IF,
                UCVM_RESOURCE_MAP_IF} ucvm_rtype_t;
 
-/* Supported UCVM parameters visible to user. Argument list:
- *
- * UCVM_PARAM_QUERY_MODE    : ucvm_ctype_t qmode
- * UCVM_PARAM_IFUNC_ZRANGE  : double min, double max (meters)
- * UCVM_PARAM_MODEL_CONF    : char *mlabel, char *param, char *value
- * CVM-H:
- *  "USE_1D_BKG": "True"/"False"
- *
- */
-typedef enum { UCVM_PARAM_QUERY_MODE=0,
-               UCVM_PARAM_IFUNC_ZRANGE,
-               UCVM_PARAM_MODEL_CONF } ucvm_param_t;
-
-/* Supported model parameters. Used internally by UCVM
- *
- * UCVM_MODEL_PARAM_FORCE_DEPTH_ABOVE_SURF : Force elevation points to be
- * treated as offset relative to regional model surface when it is
- * above the ucvm dem surface. Removes discontinuities between model
- * surface and GTL.
- *
- */
-typedef enum { UCVM_MODEL_PARAM_FORCE_DEPTH_ABOVE_SURF } ucvm_mparam_t;
-
 /* Supported coordinate query modes. Used internally by UCVM */
 typedef enum { UCVM_OPMODE_CRUSTAL=0,
                UCVM_OPMODE_GTL } ucvm_opmode_t;
@@ -147,23 +122,23 @@ typedef enum { UCVM_DOMAIN_NONE=0,
                UCVM_DOMAIN_CRUST} ucvm_domain_t;
 
 /* For swapping endian */
-typedef union ucvm_fdata_t {
+typedef union  {
     float f;
     unsigned char b[4];
 } ucvm_fdata_t;
 
 /* 3D point */
-typedef struct ucvm_point_t {
+typedef struct  {
     double coord[3];
 } ucvm_point_t;
 
 /* 3D dims */
-typedef struct ucvm_dim_t {
+typedef struct  {
     unsigned int dim[3];
 } ucvm_dim_t;
 
 /* Material properties */
-typedef struct ucvm_prop_t {
+typedef struct {
     int source;
     double vp;
     double vs;
@@ -171,7 +146,7 @@ typedef struct ucvm_prop_t {
 } ucvm_prop_t;
 
 /* Model data */
-typedef struct ucvm_data_t {
+typedef struct {
     double surf;
     double vs30;
     double depth;
@@ -184,20 +159,20 @@ typedef struct ucvm_data_t {
 } ucvm_data_t;
 
 /* Region box */
-typedef struct ucvm_region_t {
+typedef struct  {
     ucvm_ctype_t cmode;
     double p1[3];
     double p2[3];
 } ucvm_region_t;
 
 /* Model config */
-typedef struct ucvm_modelconf_t {
+typedef struct  {
     char label[UCVM_MAX_LABEL_LEN];
     ucvm_region_t region;
 } ucvm_modelconf_t;
 
 /* Model interface specification */
-typedef struct ucvm_model_t {
+typedef struct  {
     ucvm_mtype_t mtype;
     int (*create)(int id,
                   const char* lib_dir,
@@ -205,24 +180,25 @@ typedef struct ucvm_model_t {
                   ucvm_modelconf_t *conf);
     int (*initialize)();
     int (*finalize)();
-    int (*getversion)(int id,
-                      char *ver,
-                      int len);
-    int (*getlabel)(int id,
-                    char *lab,
-                    int len);
-    int (*setparam)(int id,
-                    int param,
-                    ...);
+    int (*get_version)(int id,
+                       char *ver,
+                       int len);
+    int (*get_label)(int id,
+                     char *lab,
+                     int len);
+    int (*set_parameter)(int id,
+                         const char* name,
+                         const char* value);
     int (*query)(int id,
                  ucvm_ctype_t cmode,
                  int n,
                  ucvm_point_t *pnt,
-                 ucvm_data_t *data);
+                 ucvm_data_t *data,
+                 ucvm_query_flags_t *qflags);
 } ucvm_model_t;
 
 /* Interp function */
-typedef struct ucvm_ifunc_t {
+typedef struct  {
     char label[UCVM_MAX_LABEL_LEN];
     int (*interp)(double zmin,
                   double zmax,
@@ -232,13 +208,13 @@ typedef struct ucvm_ifunc_t {
 } ucvm_ifunc_t;
 
 /* Resource flag description */
-typedef struct ucvm_flag_t {
+typedef struct  {
     char key[UCVM_MAX_FLAG_LEN];
     char value[UCVM_MAX_FLAG_LEN];
 } ucvm_flag_t;
 
 /* Resource description */
-typedef struct ucvm_resource_t {
+typedef struct  {
     ucvm_rtype_t rtype;
     ucvm_mtype_t mtype; /* Applicable to models only */
     int active; /* Applicable to models/maps only */

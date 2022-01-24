@@ -262,25 +262,15 @@ ucvm_1d_model_label(int id,
 
 /* Setparam 1D */
 int
-ucvm_1d_model_setparam(int id,
-                       int param,
-                       ...) {
-    va_list ap;
-
+ucvm_1d_model_set_parameter(int id,
+                            const char *name,
+                            const char *value) {
     if (id != ucvm_1d_id) {
         fprintf(stderr, "Invalid model id\n");
         return (UCVM_CODE_ERROR);
     }
 
-    va_start(ap, param);
-    switch (param) {
-    default:
-        break;
-    }
-
-    va_end(ap);
-
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -290,7 +280,8 @@ ucvm_1d_model_query(int id,
                     ucvm_ctype_t cmode,
                     int n,
                     ucvm_point_t *pnt,
-                    ucvm_data_t *data) {
+                    ucvm_data_t *data,
+                    ucvm_query_flags_t *qflags) {
     int i;
     double depth;
     int datagap = 0;
@@ -350,9 +341,9 @@ ucvm_1d_get_model(ucvm_model_t *m) {
     m->create = ucvm_1d_model_create;
     m->initialize = ucvm_1d_model_initialize;
     m->finalize = ucvm_1d_model_finalize;
-    m->setparam = ucvm_1d_model_setparam;
-    m->getversion = ucvm_1d_model_version;
-    m->getlabel = ucvm_1d_model_label;
+    m->set_parameter = ucvm_1d_model_set_parameter;
+    m->get_version = ucvm_1d_model_version;
+    m->get_label = ucvm_1d_model_label;
     m->query = ucvm_1d_model_query;
 
     return (UCVM_CODE_SUCCESS);

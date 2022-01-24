@@ -1,4 +1,4 @@
-#ifndef UCVM_MODEL_ELYGTL_H
+#if !defined(UCVM_MODEL_ELYGTL_H)
 #define UCVM_MODEL_ELYGTL_H
 
 #include <stdarg.h>
@@ -27,16 +27,17 @@ int ucvm_elygtl_model_version(int id,
                               int len);
 
 /* Setparam ELY */
-int ucvm_elygtl_model_setparam(int id,
-                               int param,
-                               ...);
+int ucvm_elygtl_model_set_parameter(int id,
+                                    const char* name,
+                                    const char *value);
 
 /* Query ELY */
 int ucvm_elygtl_model_query(int id,
                             ucvm_ctype_t cmode,
                             int n,
                             ucvm_point_t *pnt,
-                            ucvm_data_t *data);
+                            ucvm_data_t *data,
+                            ucvm_query_flags_t *qflags);
 
 /* Fill model structure with ELY */
 int ucvm_elygtl_get_model(ucvm_model_t *m);

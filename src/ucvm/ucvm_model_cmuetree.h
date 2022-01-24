@@ -1,4 +1,4 @@
-#ifndef UCVM_MODEL_CMUETREE_H
+#if !defined(UCVM_MODEL_CMUETREE_H)
 #define UCVM_MODEL_CMUETREE_H
 
 #include <stdarg.h>
@@ -22,16 +22,17 @@ int ucvm_cmuetree_model_version(int id,
                                 int len);
 
 /* Setparam CMU Etree */
-int ucvm_cmuetree_model_setparam(int id,
-                                 int param,
-                                 ...);
+int ucvm_cmuetree_model_set_parameter(int id,
+                                      const char *name,
+                                      const char *value);
 
 /* Query CMU Etree */
 int ucvm_cmuetree_model_query(int id,
                               ucvm_ctype_t cmode,
                               int n,
                               ucvm_point_t *pnt,
-                              ucvm_data_t *data);
+                              ucvm_data_t *data,
+                              ucvm_query_flags_t *qflags);
 
 /* Fill model structure with CMU Etree */
 int ucvm_cmuetree_get_model(ucvm_model_t *m);

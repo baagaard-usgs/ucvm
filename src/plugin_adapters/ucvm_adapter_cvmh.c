@@ -14,7 +14,8 @@
 #define VX_NO_DATA -99999.0
 
 typedef struct cvmh_params_t {
-    int force_depth_above_surf;
+    int use_1dbg;
+    int use_gtl;
 } cvmh_params_t;
 
 // UCVM API required Functions
@@ -26,23 +27,24 @@ int ucvmapi_model_create(const char *dir,
                          const char *label);
 
 /** Initialize the model. */
-int ucvmapi_model_initialize();
+int ucvmapi_model_initialize(void);
 
 /** Cleans up the model (frees memory, etc.) */
-int ucvmapi_model_finalize();
+int ucvmapi_model_finalize(void);
 
 /** Returns version information */
 int ucvmapi_model_version(char *ver,
                           int len);
 
 /* Set model user parameter */
-int ucvmapi_model_set_param(const char* name,
-                            const char* value);
+int ucvmapi_model_set_parametereter(const char* name,
+                                    const char* value);
 
 /** Queries the model */
 int ucvmapi_model_query(ucvm_plugin_point_t *points,
                         ucvm_plugin_properties_t *data,
-                        int numpts);
+                        int numpts,
+                        ucvm_query_flags_t *qflags);
 
 #endif
 
@@ -53,26 +55,27 @@ int cvmh_create(const char *dir,
                 const char *label);
 
 /** Create user parameters with default values */
-int cvmh_create_params();
+int cvmh_create_params(void);
 
 /** Initialize the model. */
-int cvmh_initialize();
+int cvmh_initialize(void);
 
 /** Cleans up the model (frees memory, etc.) */
-int cvmh_finalize();
+int cvmh_finalize(void);
 
 /** Returns version information */
 int cvmh_version(char *ver,
                  int len);
 
 /* Set model user parameter */
-int cvmh_set_param(const char* name,
-                   const char* value);
+int cvmh_set_parameter(const char* name,
+                       const char* value);
 
 /** Queries the model */
 int cvmh_query(ucvm_plugin_point_t *points,
                ucvm_plugin_properties_t *data,
-               int numpts);
+               int numpts,
+               ucvm_query_flags_t *qflags);
 
 cvmh_params_t *cvmh_params = NULL;
 
@@ -90,18 +93,18 @@ cvmh_create(const char *models_dir,
 
     if ((models_dir == NULL) || (strlen(models_dir) == 0)) {
         fprintf(stderr, "No config path defined for model `%s`\n", label);
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
     snprintf(model_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, label);
 
     /* Init vx */
     if (vx_setup(model_path) != 0) {
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     cvmh_create_params();
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -119,12 +122,13 @@ cvmh_create_params(void) {
     cvmh_params = malloc(sizeof(cvmh_params_t));
     if (!cvmh_params) {
         fprintf(stderr, "Could not create CMV-H user parameters.");
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
-    cvmh_params->force_depth_above_surf = 0;
+    cvmh_params->use_1dbg = 0;
+    cvmh_params->use_gtl = 0;
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -134,8 +138,18 @@ cvmh_create_params(void) {
  * @returns UCVM_CODE_SUCCESS if successful, UCVM_CODE_ERROR otherwise.
  */
 int
-cvmh_initialize() {
-    return (UCVM_CODE_SUCCESS);
+cvmh_initialize(void) {
+    assert(cvmh_params);
+
+    if (cvmh_params->use_1dbg) {
+        vx_register_scec();
+    } else {
+        vx_register_bkg(NULL);
+    }
+
+    vx_setgtl(cvmh_params->use_gtl);
+
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -145,7 +159,7 @@ cvmh_initialize() {
  * @returns UCVM_CODE_SUCCESS if successful, UCVM_CODE_ERROR otherwise.
  */
 int
-cvmh_finalize() {
+cvmh_finalize(void) {
     if (cvmh_params) {
         free(cvmh_params);
         cvmh_params = NULL;
@@ -155,7 +169,7 @@ cvmh_finalize() {
 #else
     vx_cleanup();
 #endif
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -177,7 +191,7 @@ cvmh_version(char *ver,
     verlen = MIN(verlen, len-1);
     memset(ver, 0, len);
     strncpy(ver, vxver, verlen);
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -188,35 +202,25 @@ cvmh_version(char *ver,
  * @param[in] value Value of parameter.
  */
 int
-cvmh_set_param(const char *name,
-               const char *value) {
+cvmh_set_parameter(const char *name,
+                   const char *value) {
     assert(cvmh_params);
 
-    if (strcasecmp(name, "FORCE_DEPTH_ABOVE_SURF") == 0) {
-        cvmh_params->force_depth_above_surf = strcasecmp(value, "true") == 0 ? 1 : 0;
-    } else if (strcasecmp(name, "USE_1D_BKG") == 0) {
-        if (strcasecmp(value, "true") == 0) {
-            /* Register SCEC 1D background model */
-            vx_register_scec();
-        } else {
-            /* Disable background model */
-            vx_register_bkg(NULL);
-        }
+    if (strcasecmp(name, "USE_1D_BKG") == 0) {
+        cvmh_params->use_1dbg = strcasecmp(value, "true") == 0 ? 1 : 0;
     } else if (strcmp(name, "USE_GTL") == 0) {
 #if defined(_UCVM_MODEL_CVMH_11_2_0)
-        /* GTL Toggle not available */
-        fprintf(stderr, "CVM-H flag '%s' not supported in 11.2.0\n", pstr);
-        return (UCVM_CODE_ERROR);
+        fprintf(stderr, "GTL not supported in CVM-H 11.2.0\n", pstr);
+        return UCVM_CODE_ERROR;
 #else
-        if (strcasecmp(value, "True") == 0) {
-            vx_setgtl(1);
-        } else {
-            vx_setgtl(0);
-        }
+        cvmh_params->use_gtl = strcasecmp(value, "true") == 0 ? 1 : 0;
 #endif
+    } else {
+        fprintf(stderr, "Parameter %s=%s not recognized for CVM-H.\n", name, value);
+        return UCVM_CODE_ERROR;
     }
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -224,10 +228,10 @@ cvmh_set_param(const char *name,
 int
 cvmh_query(ucvm_plugin_point_t *points,
            ucvm_plugin_properties_t *data,
-           int numpoints) {
+           int numpoints,
+           ucvm_query_flags_t *qflags) {
     int i;
     vx_entry_t entry;
-    float vx_surf;
     int datagap = 0;
 
     entry.coor_type = VX_COORD_GEO;
@@ -239,7 +243,7 @@ cvmh_query(ucvm_plugin_point_t *points,
         entry.coor[2] = points[i].depth;
 
         /* Force depth mode if directed and point is above surface */
-        if ((cvmh_params->force_depth_above_surf) && (points[i].depth < 0.0)) {
+        if (qflags && qflags->force_depth_above_surf && (points[i].depth < 0.0)) {
             entry.coor[2] = 0.0;
         } // if
 
@@ -261,7 +265,7 @@ cvmh_query(ucvm_plugin_point_t *points,
         }
     }
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -288,7 +292,7 @@ ucvmapi_model_create(const char *dir,
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_initialize() {
+ucvmapi_model_initialize(void) {
     return cvmh_initialize();
 }
 
@@ -299,7 +303,7 @@ ucvmapi_model_initialize() {
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_finalize() {
+ucvmapi_model_finalize(void) {
     return cvmh_finalize();
 }
 
@@ -326,9 +330,9 @@ ucvmapi_model_version(char *ver,
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_set_param(const char *name,
-                        const char *value) {
-    return cvmh_set_param(name, value);
+ucvmapi_model_set_parameter(const char *name,
+                            const char *value) {
+    return cvmh_set_parameter(name, value);
 }
 
 
@@ -343,8 +347,9 @@ ucvmapi_model_set_param(const char *name,
 int
 ucvmapi_model_query(ucvm_plugin_point_t *points,
                     ucvm_plugin_properties_t *data,
-                    int numpoints) {
-    return cvmh_query(points, data, numpoints);
+                    int numpoints,
+                    ucvm_query_flags_t *qflags) {
+    return cvmh_query(points, data, numpoints, qflags);
 }
 
 

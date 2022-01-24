@@ -28,7 +28,7 @@ disp_resources(int active_only) {
     len = MAX_RES_LEN;
     if (ucvm_get_resources(resources, &len) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "Failed to retrieve UCVM resources\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     printf("Installed Resources:\n");
@@ -70,7 +70,7 @@ disp_resources(int active_only) {
         }
     }
 
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -293,7 +293,7 @@ main(int argc,
     /* Initialize interface */
     if (ucvm_init(configfile) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add models */
@@ -303,14 +303,14 @@ main(int argc,
     }
     if (ucvm_add_model_bylist(modellist) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "Failed to enable model list %s\n", modellist);
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set user map if necessary */
     if (have_map == 1) {
         if (ucvm_use_map(map_label) != UCVM_CODE_SUCCESS) {
             fprintf(stderr, "Failed to set user map %s\n", map_label);
-            return (1);
+            return UCVM_CODE_ERROR;
         }
     }
 
@@ -319,23 +319,22 @@ main(int argc,
         cmode = UCVM_COORD_GEO_DEPTH;
         fprintf(stderr, "Using Geo Depth coordinates as default mode.\n");
     }
-    if (ucvm_setparam(UCVM_PARAM_QUERY_MODE, cmode) != UCVM_CODE_SUCCESS) {
+    if (ucvm_set_coordinate_mode(cmode) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "Failed to set z mode\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set interpolation z range */
     if (have_zrange) {
-        if (ucvm_setparam(UCVM_PARAM_IFUNC_ZRANGE,
-                          zrange[0], zrange[1]) != UCVM_CODE_SUCCESS) {
+        if (ucvm_set_ifunc_zrange(zrange[0], zrange[1]) != UCVM_CODE_SUCCESS) {
             fprintf(stderr, "Failed to set interpolation z range\n");
-            return (1);
+            return UCVM_CODE_ERROR;
         }
     }
 
     if (dispver) {
         disp_resources(1);
-        return (0);
+        return UCVM_CODE_SUCCESS;
     }
 
     /* Allocate buffers */
@@ -369,7 +368,7 @@ main(int argc,
                     /* Query the UCVM */
                     if (ucvm_query(numread, pnts, props) != UCVM_CODE_SUCCESS) {
                         fprintf(stderr, "Query CVM failed\n");
-                        return (1);
+                        return UCVM_CODE_ERROR;
                     }
 
                     /* Display results */
@@ -411,7 +410,7 @@ main(int argc,
             /* Query the UCVM */
             if (ucvm_query(numread, pnts, props) != UCVM_CODE_SUCCESS) {
                 fprintf(stderr, "Query CVM failed\n");
-                return (1);
+                return UCVM_CODE_ERROR;
             }
 
             /* Display results */
@@ -452,5 +451,5 @@ main(int argc,
     free(pnts);
     free(props);
 
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }

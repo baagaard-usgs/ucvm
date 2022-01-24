@@ -22,7 +22,6 @@
 #define CENCALVM_DEM_ACCURACY 1.0
 
 typedef struct cencalvm_params_t {
-    int force_depth_above_surf;
     int enable_squashing;
     double squash_min_elev;
     int cache_size;
@@ -41,23 +40,24 @@ int ucvmapi_model_create(const char *models_dir,
                          const char *label);
 
 /** Initialize model */
-int ucvmapi_model_initialize();
+int ucvmapi_model_initialize(void);
 
 /** Cleans up the model (frees memory, etc.) */
-int ucvmapi_model_finalize();
+int ucvmapi_model_finalize(void);
 
 /** Returns version information */
 int ucvmapi_model_version(char *ver,
                           int len);
 
 /* Set model user parameter */
-int ucvmapi_model_set_param(const char* name,
-                            const char* value);
+int ucvmapi_model_set_parameter(const char* name,
+                                const char* value);
 
 /** Queries the model */
 int ucvmapi_model_query(ucvm_plugin_point_t *points,
                         ucvm_plugin_properties_t *data,
-                        int numpts);
+                        int numpts,
+                        ucvm_query_flags_t *qflags);
 
 #endif
 
@@ -68,26 +68,27 @@ int usgs_cencalvm_create(const char *models_dir,
                          const char *label);
 
 /** Initializes the model */
-int usgs_cencalvm_initialize();
+int usgs_cencalvm_initialize(void);
 
 /** Create user parameters with default values */
-int usgs_cencalvm_create_params();
+int usgs_cencalvm_create_params(void);
 
 /** Cleans up the model (frees memory, etc.) */
-int usgs_cencalvm_finalize();
+int usgs_cencalvm_finalize(void);
 
 /** Returns version information */
 int usgs_cencalvm_version(char *ver,
                           int len);
 
 /* Set model user parameter */
-int usgs_cencalvm_set_param(const char* name,
-                            const char* value);
+int usgs_cencalvm_set_parameter(const char* name,
+                                const char* value);
 
 /** Queries the model */
 int usgs_cencalvm_query(ucvm_plugin_point_t *points,
                         ucvm_plugin_properties_t *data,
-                        int numpts);
+                        int numpts,
+                        ucvm_query_flags_t *qflags);
 
 /* Local variables */
 
@@ -110,25 +111,25 @@ usgs_cencalvm_create(const char *models_dir,
                      const char *label) {
     if ((models_dir == NULL) || (strlen(models_dir) == 0)) {
         fprintf(stderr, "No models directory path defined for model `%s`\n", label);
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     query = cencalvm_createQuery();
     if (query == NULL) {
         fprintf(stderr, "Could not create query.\n");
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     error_handler = cencalvm_errorHandler(query);
     if (error_handler == NULL) {
         fprintf(stderr, "Could not get handle to error handler.\n");
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     usgs_cencalvm_create_params();
     snprintf(cencalvm_params->model_dir, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, label);
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -147,31 +148,31 @@ usgs_cencalvm_initialize(void) {
              cencalvm_params->filename_detailed);
     if (cencalvm_filename(query, detailed_fullpath) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
     if (cencalvm_params->enable_regional) {
         snprintf(regional_fullpath, UCVM_MAX_PATH_LEN, "%s/%s", cencalvm_params->model_dir,
                  cencalvm_params->filename_regional);
         if (cencalvm_filenameExt(query, regional_fullpath) != 0) {
             fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-            return (UCVM_CODE_ERROR);
+            return UCVM_CODE_ERROR;
         }
     }
 
     /* Set cache size */
     if (cencalvm_cacheSize(query, cencalvm_params->cache_size) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
     if (cencalvm_cacheSizeExt(query, cencalvm_params->cache_size) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     /* Open database for querying */
     if (cencalvm_open(query) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set query type to maximum resolution */
@@ -180,10 +181,10 @@ usgs_cencalvm_initialize(void) {
     /* Create buffer to hold values returned in queries */
     output_buffer = (double*) malloc(sizeof(double)*NUM_VALUES_OUT);
     if (output_buffer == NULL) {
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -201,11 +202,10 @@ usgs_cencalvm_create_params(void) {
     cencalvm_params = malloc(sizeof(cencalvm_params_t));
     if (!cencalvm_params) {
         fprintf(stderr, "Could not create CenCalVM user parameters.");
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set default values. */
-    cencalvm_params->force_depth_above_surf = 0;
     cencalvm_params->enable_squashing = 0;
     cencalvm_params->squash_min_elev = -200000.0;
     cencalvm_params->cache_size = 64;
@@ -214,13 +214,13 @@ usgs_cencalvm_create_params(void) {
     strncpy(cencalvm_params->filename_regional, "USGSBayAreaVMExt-08.3.0.etree", UCVM_MAX_PATH_LEN);
     cencalvm_params->enable_regional = 1;
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
 /* Finalize CenCal */
 int
-usgs_cencalvm_finalize() {
+usgs_cencalvm_finalize(void) {
     if (cencalvm_params) {
         free(cencalvm_params);
         cencalvm_params = NULL;
@@ -235,7 +235,7 @@ usgs_cencalvm_finalize() {
         output_buffer = NULL;
     }
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -244,7 +244,7 @@ int
 usgs_cencalvm_version(char *ver,
                       int len) {
     ucvm_strcpy(ver, cencalvm_params->filename_detailed, len);
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -255,23 +255,11 @@ usgs_cencalvm_version(char *ver,
  * @param[in] value Value of parameter.
  */
 int
-usgs_cencalvm_set_parameter(const char *name,
-                            const char *value) {
+usgs_cencalvm_set_parametereter(const char *name,
+                                const char *value) {
     assert(cencalvm_params);
 
-    if (strcasecmp(name, "FORCE_DEPTH_ABOVE_SURF") == 0) {
-        cencalvm_params->force_depth_above_surf = strcasecmp(value, "true") == 0 ? 1 : 0;
-
-        /* Squashing is hardwired to be off. This appears to be related to how the UCVM software
-         * determines the elevation of the top surface on its own.
-         */
-#if 0
-    } else if (strcasecmp(name, "ENABLE_SQUASHING") == 0) {
-        cencalvm_params->enable_squashing = strcasecmp(value, "true") == 0 ? 1 : 0;
-    } else if (strcasecmp(name, "SQUASHING_MAX_DEPTH") == 0) {
-        cencalvm_params->squash_min_elev = atof(value);
-#endif
-    } else if (strcasecmp(name, "CACHE_SIZE_MB") == 0) {
+    if (strcasecmp(name, "CACHE_SIZE_MB") == 0) {
         cencalvm_params->cache_size = atoi(value);
     } else if (strcasecmp(name, "FILENAME_DETAILED") == 0) {
         strncpy(cencalvm_params->filename_detailed, value, UCVM_MAX_PATH_LEN);
@@ -279,8 +267,14 @@ usgs_cencalvm_set_parameter(const char *name,
         strncpy(cencalvm_params->filename_regional, value, UCVM_MAX_PATH_LEN);
     } else if (strcasecmp(name, "ENABLE_REGIONAL") == 0) {
         cencalvm_params->enable_regional = strcasecmp(value, "true") == 0 ? 1 : 0;
+#if 0
+    } else if (strcasecmp(name, "ENABLE_SQUASHING") == 0) {
+        cencalvm_params->enable_squashing = strcasecmp(value, "true") == 0 ? 1 : 0;
+    } else if (strcasecmp(name, "SQUASHING_MAX_DEPTH") == 0) {
+        cencalvm_params->squash_min_elev = atof(value);
+#endif
     } else {
-        fprintf(stderr, "Unknown parameter '%s' for the CenCalVM.\n", name);
+        fprintf(stderr, "Unknown parameter %s=%s for the CenCalVM.\n", name, value);
         return UCVM_CODE_ERROR;
     }
 
@@ -306,7 +300,7 @@ usgs_cencalvm_getsurface(double lon,
     /* Calculate starting z for surface search */
     if (cencalvm_squash(query, 0, 0.0) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     elev = CENCALVM_MODEL_BOTTOM;
@@ -356,15 +350,15 @@ usgs_cencalvm_getsurface(double lon,
     /* Restore original squash mode */
     if (cencalvm_squash(query, cencalvm_params->enable_squashing, cencalvm_params->squash_min_elev) != 0) {
         fprintf(stderr, "%s\n", cencalvm_error_message(error_handler));
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     if (elev - CENCALVM_MODEL_BOTTOM <= 0.01) {
-        return (UCVM_CODE_ERROR);
+        return UCVM_CODE_ERROR;
     }
 
     *surf_elev = elev;
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -372,7 +366,8 @@ usgs_cencalvm_getsurface(double lon,
 int
 usgs_cencalvm_query(ucvm_plugin_point_t *points,
                     ucvm_plugin_properties_t *data,
-                    int numpoints) {
+                    int numpoints,
+                    ucvm_query_flags_t *qflags) {
     int i;
     double point_lon, point_lat, point_elev, surf_elev;
     int datagap = 0;
@@ -386,7 +381,7 @@ usgs_cencalvm_query(ucvm_plugin_point_t *points,
         point_elev = points[i].ucvm_surf_elev - points[i].depth;
 
         /* Force depth mode if directed and point is above surface */
-        if ((cencalvm_params->force_depth_above_surf) && (points[i].depth < 0.0)) {
+        if (qflags && qflags->force_depth_above_surf && (points[i].depth < 0.0)) {
             if (usgs_cencalvm_getsurface(point_lon, point_lat, &surf_elev, CENCALVM_DEM_ACCURACY) == UCVM_CODE_SUCCESS) {
                 /* Add small buffer to overcome surface uncertainty */
                 point_elev = surf_elev - CENCALVM_DEM_ACCURACY;
@@ -427,10 +422,10 @@ usgs_cencalvm_query(ucvm_plugin_point_t *points,
     }
 
     if (datagap) {
-        return (UCVM_CODE_DATAGAP);
+        return UCVM_CODE_DATAGAP;
     }
 
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -457,7 +452,7 @@ ucvmapi_model_create(const char *dir,
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_initialize() {
+ucvmapi_model_initialize(void) {
     return usgs_cencalvm_initialize();
 }
 
@@ -468,7 +463,7 @@ ucvmapi_model_initialize() {
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_finalize() {
+ucvmapi_model_finalize(void) {
     return usgs_cencalvm_finalize();
 }
 
@@ -495,9 +490,9 @@ ucvmapi_model_version(char *ver,
  * @return CCA_CODE_SUCCESS or CCA_CODE_ERROR.
  */
 int
-ucvmapi_model_set_param(const char *name,
-                        const char *value) {
-    return usgs_cencalvm_set_param(name, value);
+ucvmapi_model_set_parameter(const char *name,
+                            const char *value) {
+    return usgs_cencalvm_set_parameter(name, value);
 }
 
 
@@ -512,8 +507,9 @@ ucvmapi_model_set_param(const char *name,
 int
 ucvmapi_model_query(ucvm_plugin_point_t *points,
                     ucvm_plugin_properties_t *data,
-                    int numpoints) {
-    return usgs_cencalvm_query(points, data, numpoints);
+                    int numpoints,
+                    ucvm_query_flags_t *qflags) {
+    return usgs_cencalvm_query(points, data, numpoints, qflags);
 }
 
 

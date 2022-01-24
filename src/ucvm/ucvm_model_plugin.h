@@ -18,7 +18,6 @@
 
 // Includes
 #include "ucvm_dtypes.h"
-#include "ucvm_plugin_dtypes.h"
 
 // Defines
 #define MODEL_POINT_BUFFER  1000
@@ -38,7 +37,8 @@ typedef struct ucvm_plugin_model_t {
                                const char* value);
     int (*model_query)(ucvm_plugin_point_t *points,
                        ucvm_plugin_properties_t *data,
-                       int numpoints);
+                       int numpoints,
+                       ucvm_query_flags_t *qflags);
 } ucvm_plugin_model_t;
 
 ucvm_plugin_model_t *get_plugin_by_label(char *);
@@ -57,7 +57,8 @@ typedef int (*MP_FNPTR)(const char *,
                         const char *);
 typedef int (*MQ_FNPTR)(ucvm_plugin_point_t *,
                         ucvm_plugin_properties_t *,
-                        int);
+                        int,
+                        ucvm_query_flags_t *);
 
 // UCVM API Required Functions
 
@@ -84,16 +85,17 @@ int ucvm_plugin_model_label(int id,
                             int len);
 
 /** Sets user parameters. */
-int ucvm_plugin_model_setparam(int id,
-                               int param,
-                               ...);
+int ucvm_plugin_model_set_parameter(int id,
+                                    const char* name,
+                                    const char* value);
 
 /** Queries the model. */
 int ucvm_plugin_model_query(int id,
                             ucvm_ctype_t cmode,
                             int n,
                             ucvm_point_t *pnt,
-                            ucvm_data_t *data);
+                            ucvm_data_t *data,
+                            ucvm_query_flags_t* qflags);
 
 /** Sets the model interface information. */
 int ucvm_plugin_get_model(const char *lib_dir,

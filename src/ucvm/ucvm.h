@@ -45,9 +45,16 @@ int ucvm_model_version(int m,
                        char *ver,
                        int len);
 
-/* Set parameters (see ucvm_dtypes.h for valid param flags) */
-int ucvm_setparam(ucvm_param_t param,
-                  ...);
+int ucvm_set_query_flags(ucvm_query_flags_t *query_flags);
+
+int ucvm_set_ifunc_zrange(double depth_min,
+                          double depth_max);
+
+int ucvm_set_coordinate_mode(ucvm_ctype_t cmode);
+
+int ucvm_set_model_parameter(const char *model_label,
+                             const char *param_name,
+                             const char *param_value);
 
 /* Query underlying models */
 int ucvm_query(int n,

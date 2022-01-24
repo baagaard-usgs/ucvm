@@ -1,4 +1,4 @@
-#ifndef UCVM_MODEL_BBP1D_H
+#if !defined(UCVM_MODEL_BBP1D_H)
 #define UCVM_MODEL_BBP1D_H
 
 #include <stdarg.h>
@@ -26,17 +26,18 @@ int ucvm_bbp1d_model_label(int id,
                            char *lab,
                            int len);
 
-/* Setparam BBP 1D */
-int ucvm_bbp1d_model_setparam(int id,
-                              int param,
-                              ...);
+/* Set_parameter BBP 1D */
+int ucvm_bbp1d_model_set_parameter(int id,
+                                   const char *name,
+                                   const char *value);
 
 /* Query BBP 1D */
 int ucvm_bbp1d_model_query(int id,
                            ucvm_ctype_t cmode,
                            int n,
                            ucvm_point_t *pnt,
-                           ucvm_data_t *data);
+                           ucvm_data_t *data,
+                           ucvm_query_flags_t *qflags);
 
 /* Fill model structure with BBP 1D */
 int ucvm_bbp1d_get_model(ucvm_model_t *m);

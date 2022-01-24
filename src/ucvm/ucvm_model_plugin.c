@@ -137,9 +137,9 @@ ucvm_plugin_model_create(int id,
     pptr->model_version = *version_fnptr;
 
     MP_FNPTR set_param_fnptr;
-    *(void**)(&set_param_fnptr) = dlsym(handle, "ucvmapi_model_set_param");
+    *(void**)(&set_param_fnptr) = dlsym(handle, "ucvmapi_model_set_parameter");
     if (dlerror() != NULL) {
-        fprintf(stderr, "Could not load ucvmapi_model_set_param.\n");
+        fprintf(stderr, "Could not load ucvmapi_model_set_parameter.\n");
         return UCVM_CODE_ERROR;
     }
     pptr->model_set_parameter = *set_param_fnptr;
@@ -398,7 +398,8 @@ ucvm_plugin_model_query(int id,
                         ucvm_ctype_t cmode,
                         int numpoints,
                         ucvm_point_t *points,
-                        ucvm_data_t *data) {
+                        ucvm_data_t *data,
+                        ucvm_query_flags_t *qflags) {
     int i = 0, j = 0, ibatch = 0;
     double depth = 0;
     int datagap = 0;
@@ -447,7 +448,7 @@ ucvm_plugin_model_query(int id,
 
             if ((ibatch == MODEL_POINT_BUFFER) || (i == numpoints - 1)) {
                 // We've reached the maximum buffer. Do the query.
-                pptr->model_query(ucvm_plugin_points, ucvm_plugin_data, ibatch);
+                pptr->model_query(ucvm_plugin_points, ucvm_plugin_data, ibatch, qflags);
                 // Transfer our findings.
                 for (j = 0; j < ibatch; j++) {
                     if ((ucvm_plugin_data[j].vp >= 0) && (ucvm_plugin_data[j].vs >= 0) && (ucvm_plugin_data[j].rho >= 0)) {
@@ -468,7 +469,7 @@ ucvm_plugin_model_query(int id,
     }
     /* catch the last bits of partial chunk */
     if (ibatch != 0) {
-        pptr->model_query(ucvm_plugin_points, ucvm_plugin_data, ibatch);
+        pptr->model_query(ucvm_plugin_points, ucvm_plugin_data, ibatch, qflags);
         // Transfer our findings.
         for (j = 0; j < ibatch; j++) {
             if ((ucvm_plugin_data[j].vp >= 0) && (ucvm_plugin_data[j].vs >= 0) && (ucvm_plugin_data[j].rho >= 0)) {
@@ -520,9 +521,9 @@ ucvm_plugin_get_model(const char *lib_dir,
         m->create = ucvm_plugin_model_create;
         m->initialize = ucvm_plugin_model_initialize;
         m->finalize = ucvm_plugin_model_finalize;
-        m->getversion = ucvm_plugin_model_version;
-        m->getlabel = ucvm_plugin_model_label;
-        m->setparam = ucvm_plugin_model_setparam;
+        m->get_version = ucvm_plugin_model_version;
+        m->get_label = ucvm_plugin_model_label;
+        m->set_parameter = ucvm_plugin_model_set_parameter;
         m->query = ucvm_plugin_model_query;
         return UCVM_CODE_SUCCESS;
     } else {
@@ -532,13 +533,9 @@ ucvm_plugin_get_model(const char *lib_dir,
 
 
 int
-ucvm_plugin_model_setparam(int id,
-                           int param,
-                           ...) {
-    va_list ap;
-    char *pname;
-    char *pvalue;
-
+ucvm_plugin_model_set_parameter(int id,
+                                const char* name,
+                                const char* value) {
     ucvm_plugin_model_t *pptr = get_plugin_by_id(id);
     if (!pptr) {
         fprintf(stderr, "Invalid model id.\n");
@@ -549,23 +546,9 @@ ucvm_plugin_model_setparam(int id,
         return (UCVM_CODE_ERROR);
     }
 
-    va_start(ap, param);
-    switch (param) {
-    case UCVM_MODEL_PARAM_FORCE_DEPTH_ABOVE_SURF:
-        pptr->model_set_parameter("FORCE_DEPTH_ABOVE_SURF", "True");
-        break;
-    case UCVM_PARAM_MODEL_CONF:
-        pname = va_arg(ap, char *);
-        pvalue = va_arg(ap, char *);
-        pptr->model_set_parameter(pname, pvalue);
-        break;
-    default:
-        break;
-    }
+    pptr->model_set_parameter(name, value);
 
-    va_end(ap);
-
-    return (UCVM_CODE_SUCCESS);
+    return UCVM_CODE_SUCCESS;
 }
 
 

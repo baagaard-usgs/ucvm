@@ -20,4 +20,9 @@ typedef struct ucvm_plugin_properties_t {
     double qs;
 } ucvm_plugin_properties_t;
 
+/* Flags used to set query behavior. */
+typedef struct {
+    int force_depth_above_surf; /* Force points above top surface to lie on surface. */
+} ucvm_query_flags_t;
+
 #endif
