@@ -188,7 +188,7 @@ ucvm_init(const char *config) {
     /* Check that UCVM interface and map path are defined */
     /* for ucvm */
     cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_interface");
-    if (cfgentry == NULL) {
+    if (!cfgentry) {
         fprintf(stderr, "UCVM map interface not found in %s\n", config);
         return UCVM_CODE_ERROR;
     }
@@ -196,13 +196,13 @@ ucvm_init(const char *config) {
         fprintf(stderr, "Invalid UCVM map interface '%s'. Expected '%s'\n", cfgentry->value, UCVM_MAP_ETREE);
         return UCVM_CODE_ERROR;
     }
-    if (ucvm_find_name(ucvm_cfg, "ucvm_map_relpath") == NULL) {
+    if (!ucvm_find_name(ucvm_cfg, "ucvm_map_relpath")) {
         fprintf(stderr, "UCVM map relative path not found in %s\n", config);
         return UCVM_CODE_ERROR;
     }
     /* for ucvm_utah */
     cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_utah_interface");
-    if (cfgentry == NULL) {
+    if (!cfgentry) {
         fprintf(stderr, "UCVM Utah map interface not found in %s\n", config);
         return UCVM_CODE_ERROR;
     }
@@ -210,16 +210,16 @@ ucvm_init(const char *config) {
         fprintf(stderr, "Invalid UCVM Utah map interface '%s'. Expected '%s'\n", cfgentry->value, UCVM_MAP_ETREE);
         return UCVM_CODE_ERROR;
     }
-    cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_utah_map_relpath");
-    if (cfgentry == NULL) {
+    if (!ucvm_find_name(ucvm_cfg, "ucvm_utah_map_relpath")) {
         fprintf(stderr, "UCVM Utah map relative path not found in %s\n", config);
         return UCVM_CODE_ERROR;
     }
-    snprintf(map_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, cfgentry->value);
 
     /* Initialize default map */
+    cfgentry = ucvm_find_name(ucvm_cfg, "ucvm_map_relpath");assert(cfgentry);
+    snprintf(map_path, UCVM_MAX_PATH_LEN, "%s/%s", models_dir, cfgentry->value);
     if (ucvm_map_init(UCVM_MAP_UCVM, map_path) != UCVM_CODE_SUCCESS) {
-        fprintf(stderr, "Failed to initialize UCVM map\n");
+        fprintf(stderr, "Failed to initialize default UCVM map '%s'.\n", map_path);
         return UCVM_CODE_ERROR;
     }
 
