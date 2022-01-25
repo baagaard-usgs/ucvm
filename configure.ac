@@ -425,6 +425,8 @@ AC_CONFIG_FILES([Makefile
   model/usgs_cencalvm/Makefile
 	man/Makefile
 	conf/Makefile
+  test/Makefile
+  test/inputs/Makefile
 	])
 
 AC_OUTPUT

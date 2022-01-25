@@ -5,19 +5,18 @@
 #include "test_defs.h"
 #include "unittest_suite_lib.h"
 
+int
+main (int argc,
+      char *argv[]) {
+    char *xmldir = NULL;
+    int err = UCVM_CODE_SUCCESS;
 
-int main (int argc, char *argv[])
-{
-  char *xmldir;
+    if (argc == 2) {
+        xmldir = argv[1];
+    }
 
-  if (argc == 2) {  
-    xmldir = argv[1];
-  } else {
-    xmldir = NULL;
-  }
+    /* Run test suites */
+    err |= suite_lib(xmldir);
 
-  /* Run test suites */
-  suite_lib(xmldir);
-
-  return 0;
+    return err;
 }

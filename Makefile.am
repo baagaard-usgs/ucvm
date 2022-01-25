@@ -7,10 +7,10 @@ SUBDIRS = \
 	model \
 	src \
 	man \
-	conf
+	conf \
+	test
 
 #documentation
-#test
 #exmaples
 #utilities
 

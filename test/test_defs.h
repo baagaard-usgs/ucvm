@@ -5,9 +5,10 @@
 #include <stdio.h>
 #include "ucvm.h"
 
-#define boolean int
-#define True 1
-#define False 0
+/* Location of binaries */
+#if !defined(BIN_DIR)
+#define BIN_DIR "../src"
+#endif
 
 #define MAX_POINTS 4000000
 #define MAX_TEST_NAME 256
@@ -16,32 +17,38 @@
 
 #define OUTPUT_FMT "%10.4lf %10.4lf %10.3lf %10.3lf %10.3lf %10s %10.3lf %10.3lf %10.3lf %10s %10.3lf %10.3lf %10.3lf %10s %10.3lf %10.3lf %10.3lf\n"
 
-
 /* Test datatype */
 typedef struct test_info_t {
-  char class_name[MAX_TEST_NAME];
-  char test_name[MAX_TEST_NAME];
-  int (*test_func)();
-  int result;
-  double elapsed_time;
+    char class_name[MAX_TEST_NAME];
+    char test_name[MAX_TEST_NAME];
+    int (*test_func)();
+    int result;
+    double elapsed_time;
 } test_info_t;
-
 
 /* Suite datatype */
 typedef struct test_suite_t {
-  char suite_name[MAX_TEST_NAME];
-  int num_tests;
-  test_info_t *tests;
-  time_t exec_time;
+    char suite_name[MAX_TEST_NAME];
+    int num_tests;
+    test_info_t *tests;
+    time_t exec_time;
 } test_suite_t;
 
-
 /* Assertions of equality */
-int test_assert_int(int val1, int val2);
-int test_assert_float(float val1, float val2);
-int test_assert_double(double val1, double val2);
-int test_assert_string(const char* val1, const char* val2);
-int test_assert_file(const char *file1, const char *file2);
+int test_assert_int(int val1,
+                    int val2);
+
+int test_assert_float(float val1,
+                      float val2);
+
+int test_assert_double(double val1,
+                       double val2);
+
+int test_assert_string(const char* val1,
+                       const char* val2);
+
+int test_assert_file(const char *file1,
+                     const char *file2);
 
 /* Get time */
 int test_get_time(time_t *ts);
@@ -51,23 +58,40 @@ int test_run_suite(test_suite_t *suite);
 
 /* XML formatted logfiles */
 FILE *init_log(const char *logfile);
+
 int close_log(FILE *lf);
-int write_log(FILE *lf, test_suite_t *suite);
+
+int write_log(FILE *lf,
+              test_suite_t *suite);
 
 /* Read points from text file */
-int read_points(const char *file, int max, ucvm_point_t *pnts, int *nn);
+int read_points(const char *file,
+                int max,
+                ucvm_point_t *pnts,
+                int *nn);
 
 /* Read data values from text file */
-int read_data(const char *file, int max, ucvm_data_t *data, int *nn);
+int read_data(const char *file,
+              int max,
+              ucvm_data_t *data,
+              int *nn);
 
 /* write data values to text file */
-int write_data(const char *file, int num_pnts, ucvm_data_t *data, ucvm_point_t *pnts,
-              const char *cr_label, const char *gtl_label, const char *if_label);
+int write_data(const char *file,
+               int num_pnts,
+               ucvm_data_t *data,
+               ucvm_point_t *pnts,
+               const char *cr_label,
+               const char *gtl_label,
+               const char *if_label);
 
 /* UCVM query tool */
-int run_ucvm_query(const char *bindir, const char *conf,
-		   const char *model, const char *map,
-		   const char *infile, const char *outfile);
+int run_ucvm_query(const char *bindir,
+                   const char *conf,
+                   const char *model,
+                   const char *map,
+                   const char *infile,
+                   const char *outfile);
 
 /* Fill model structure with test model */
 int get_test_model(ucvm_model_t *m);

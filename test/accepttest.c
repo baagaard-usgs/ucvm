@@ -7,20 +7,18 @@
 #include "test_defs.h"
 #include "accepttest_suite_grid.h"
 
+int
+main (int argc,
+      char *argv[]) {
+    char *xmldir = NULL;
+    int err = UCVM_CODE_SUCCESS;
 
-int main (int argc, char *argv[])
-{
+    if (argc == 2) {
+        xmldir = argv[1];
+    }
 
-  char *xmldir;
+    /* Run test suites */
+    err |= suite_grid(xmldir);
 
-  if (argc == 2) {  
-    xmldir = argv[1];
-  } else {
-    xmldir = NULL;
-  }
-
-  /* Run test suites */
-  suite_grid(xmldir);
-
-  return 0;
+    return err;
 }

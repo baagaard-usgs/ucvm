@@ -14,14 +14,14 @@ test_lib_init() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -32,21 +32,21 @@ test_lib_add_model_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -61,14 +61,14 @@ test_lib_query_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Query a point */
@@ -79,28 +79,28 @@ test_lib_query_1d() {
     if (ucvm_query(nn, &pnts, &data) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to query 1d\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Check values */
     if (test_assert_double(data.cmb.vp, 5000.0) != 0) {
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
     if (test_assert_double(data.cmb.vs, 2886.751346) != 0) {
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
     if (test_assert_double(data.cmb.rho, 2654.5) != 0) {
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -116,14 +116,14 @@ test_lib_get_model_label_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Query a point */
@@ -134,7 +134,7 @@ test_lib_get_model_label_1d() {
     if (ucvm_query(nn, &pnts, &data) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to query 1d\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Get label */
@@ -145,19 +145,19 @@ test_lib_get_model_label_1d() {
     if (strlen(cr_label) == 0) {
         fprintf(stderr, "FAIL: Label string is empty\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     if (test_assert_string(cr_label, UCVM_MODEL_1D) != 0) {
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -168,29 +168,28 @@ test_lib_setparam_querymode_gd_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set query model */
-    if (ucvm_setparam(UCVM_PARAM_QUERY_MODE,
-                      UCVM_COORD_GEO_DEPTH) != UCVM_CODE_SUCCESS) {
+    if (ucvm_set_coordinate_mode(UCVM_COORD_GEO_DEPTH) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to set query mode to geo depth\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -201,29 +200,28 @@ test_lib_setparam_querymode_ge_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Set query model */
-    if (ucvm_setparam(UCVM_PARAM_QUERY_MODE,
-                      UCVM_COORD_GEO_ELEV) != UCVM_CODE_SUCCESS) {
+    if (ucvm_set_coordinate_mode(UCVM_COORD_GEO_ELEV) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to set query mode to geo elev\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -239,14 +237,14 @@ test_lib_model_version_1d() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_1D) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_1D);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Query a point */
@@ -257,7 +255,7 @@ test_lib_model_version_1d() {
     if (ucvm_query(nn, &pnts, &data) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to query 1d\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Get model version */
@@ -266,51 +264,50 @@ test_lib_model_version_1d() {
                            UCVM_MAX_VERSION_LEN) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to retrieve 1d model version\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     if (strlen(ver) == 0) {
         fprintf(stderr, "FAIL: Version string is empty\n");
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     if (test_assert_string(ver, "Hadley-Kanamori 1D (CVM-S)") != 0) {
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
 int
-test_lib_add_model_cencal() {
-    printf("Test: UCVM lib add model USGS CenCal\n");
+test_lib_add_model_cencalvm() {
+    printf("Test: UCVM lib add model USGS CenCalVM\n");
 
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CENCAL) != UCVM_CODE_SUCCESS) {
-        fprintf(stderr, "FAIL: Failed to enable model %s\n",
-                UCVM_MODEL_CENCAL);
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CENCALVM) != UCVM_CODE_SUCCESS) {
+        fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_CENCALVM);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -321,22 +318,21 @@ test_lib_add_model_cvmh() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CVMH) != UCVM_CODE_SUCCESS) {
-        fprintf(stderr, "FAIL: Failed to enable model %s\n",
-                UCVM_MODEL_CVMH);
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CVMH) != UCVM_CODE_SUCCESS) {
+        fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_CVMH);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -347,22 +343,21 @@ test_lib_add_model_cvms() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CVMS) != UCVM_CODE_SUCCESS) {
-        fprintf(stderr, "FAIL: Failed to enable model %s\n",
-                UCVM_MODEL_CVMS);
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CVMS) != UCVM_CODE_SUCCESS) {
+        fprintf(stderr, "FAIL: Failed to enable model %s\n", UCVM_MODEL_CVMS);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -373,22 +368,22 @@ test_lib_add_model_cvmsi() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CVMSI) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CVMSI) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CVMSI);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -399,22 +394,22 @@ test_lib_add_model_cvms5() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CVMS5) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CVMS5) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CVMS5);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -425,22 +420,22 @@ test_lib_add_model_ivlsu() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_IVLSU) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_IVLSU) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_IVLSU);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -451,22 +446,22 @@ test_lib_add_model_cvlsu() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CVLSU) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CVLSU) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CVLSU);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -477,22 +472,22 @@ test_lib_add_model_wfcvm() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_WFCVM) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_WFCVM) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_WFCVM);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -503,22 +498,22 @@ test_lib_add_model_albacore() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_ALBACORE) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_ALBACORE) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_ALBACORE);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -529,22 +524,22 @@ test_lib_add_model_cca() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CCA) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CCA) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CCA);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -555,22 +550,22 @@ test_lib_add_model_cs173() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CS173) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CS173) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CS173);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -581,22 +576,22 @@ test_lib_add_model_cs173h() {
     /* Setup UCVM */
     if (ucvm_init("../conf/ucvm.conf") != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to initialize UCVM API\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Add model */
-    if (ucvm_add_model(UCVM_MODEL_CS173H) != UCVM_CODE_SUCCESS) {
+    if (ucvm_add_model_bylabel(UCVM_MODEL_CS173H) != UCVM_CODE_SUCCESS) {
         fprintf(stderr, "FAIL: Failed to enable model %s\n",
                 UCVM_MODEL_CS173H);
         ucvm_finalize();
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     /* Finalize UCVM */
     ucvm_finalize();
 
     printf("PASS\n");
-    return (0);
+    return UCVM_CODE_SUCCESS;
 }
 
 
@@ -651,7 +646,7 @@ suite_lib(const char *xmldir) {
     suite.tests = malloc(suite.num_tests * sizeof(test_info_t));
     if (suite.tests == NULL) {
         fprintf(stderr, "Failed to alloc test structure\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
     test_get_time(&suite.exec_time);
 
@@ -694,7 +689,7 @@ suite_lib(const char *xmldir) {
 #ifdef _UCVM_ENABLE_CENCALVM
     strcpy(suite.tests[suite.num_tests].test_name,
            "test_lib_add_model_cencal");
-    suite.tests[suite.num_tests].test_func = &test_lib_add_model_cencal;
+    suite.tests[suite.num_tests].test_func = &test_lib_add_model_cencalvm;
     suite.tests[suite.num_tests].elapsed_time = 0.0;
     suite.num_tests++;
 #endif
@@ -789,7 +784,7 @@ suite_lib(const char *xmldir) {
 
     if (test_run_suite(&suite) != 0) {
         fprintf(stderr, "Failed to execute tests\n");
-        return (1);
+        return UCVM_CODE_ERROR;
     }
 
     if (xmldir != NULL) {
@@ -797,12 +792,12 @@ suite_lib(const char *xmldir) {
         lf = init_log(logfile);
         if (lf == NULL) {
             fprintf(stderr, "Failed to initialize logfile\n");
-            return (1);
+            return UCVM_CODE_ERROR;
         }
 
         if (write_log(lf, &suite) != 0) {
             fprintf(stderr, "Failed to write test log\n");
-            return (1);
+            return UCVM_CODE_ERROR;
         }
 
         close_log(lf);
