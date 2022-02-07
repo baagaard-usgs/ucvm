@@ -3,6 +3,7 @@ CCA_VER=1.1.0
 CCA_URL=https://github.com/baagaard-usgs/cca/releases/download/v$(CCA_VER)
 CCA_TARBALL=cca-$(CCA_VER).tar.gz
 
+
 all: installed_cca
 
 cca:
@@ -12,7 +13,7 @@ cca:
 	cd cca-build && \
 		../cca-$(CCA_VER)/configure \
 			--prefix=$(prefix) --datarootdir=$(prefix)/share/ucvm --disable-proj --disable-etree \
-			CC=$(CC) CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"; \
+			CC=$(CC) CPPFLAGS="$(CPPFLAGS) $(PROJ_INCLUDES) $(ETREE_INCLUDES)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS) $(PROJ_LDFLAGS) $(ETREE_LDFLAGS)"; \
 			make && make install && make check && \
 			touch $(abs_builddir)/installed_$@
 

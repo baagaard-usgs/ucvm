@@ -19,7 +19,7 @@ cencalvm:
 	cd cencalvm-build && \
 		../cencalvm-$(CENCALVM_VER)/configure \
 			--prefix=$(prefix) --datarootdir=$(prefix)/share/ucvm \
-			CC=$(CC) CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"; \
+			CC=$(CC) CPPFLAGS="$(CPPFLAGS) $(PROJ_INCLUDES) $(ETREE_INCLUDES)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS) $(PROJ_LDFLAGS) $(ETREE_LDFLAGS)"; \
 			make && make install && make check && \
 			touch $(abs_builddir)/installed_$@
 

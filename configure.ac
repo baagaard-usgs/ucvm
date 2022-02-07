@@ -339,7 +339,7 @@ else
   if test "$with_proj_incdir" != no ; then
     PROJ_INCLUDES="-I$with_proj_incdir"
   fi
-  if test"$with_proj_libdir" != no ; then
+  if test "$with_proj_libdir" != no ; then
     PROJ_LDFLAGS="-L$with_proj_libdir -lproj"
   fi
   SCEC_PROJ_HEADER
